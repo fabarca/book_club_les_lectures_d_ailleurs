@@ -1,5 +1,5 @@
 Projet:
-Carte interactive des livres lus dans le Book Club "Lecture d'ailleurs". Il s'agit d'un site web statique publié sur GitHub Pages. Un marqueur par livre est affiché sur une carte du monde (positionné selon le pays de l'auteur), et un clic sur un marqueur ouvre le détail du livre (couverture, auteur, année, description). Les données sont extraites automatiquement depuis Meetup.
+Carte interactive des livres lus dans le Book Club "Lecture d'ailleurs". Il s'agit d'un site web statique publié sur GitHub Pages. Un marqueur par pays est affiché sur une carte du monde dessinée en SVG (positionné au centroïde du pays de l'auteur), indiquant le nombre de livres lus dans ce pays. Au survol, le pays est mis en évidence et son nom s'affiche ; un clic ouvre le détail du livre (couverture, auteur, année, description), ou une liste pour choisir lequel afficher si plusieurs livres partagent ce pays. Les données sont extraites automatiquement depuis Meetup.
 
 Source: historique des événements et des livres lus (récupéré via l'API GraphQL publique de Meetup, sans authentification — voir `meetup_parser.js`)
 https://www.meetup.com/fr-fr/club-de-lecture-les-lectures-d-ailleurs/
