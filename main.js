@@ -1,5 +1,9 @@
 import { parseBookMarkdown } from "./lib/bookParser.js";
 import { lookupCountryGeoName } from "./lib/countryLookup.js";
+import { buildCountryCentroids, geometryToSvgPath } from "./lib/countryGeometry.js";
+import { project, MAP_VIEWBOX } from "./lib/geoProjection.js";
+import { createSvgMap } from "./lib/svgMapView.js";
+import { renderDetailPanel, renderBookList } from "./lib/detailPanel.js";
 async function loadManifest() {
     const response = await fetch("books/manifest.json");
     if (!response.ok)
@@ -19,77 +23,29 @@ async function loadBook(entry) {
         return null;
     }
 }
-/** Bounding-box center of a country's geometry. Simple and good enough for
- * marker placement; not corrected for countries that cross the antimeridian
- * (e.g. Russia, Fiji), where this can land in the wrong hemisphere. */
-function computeCentroid(geometry) {
-    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-    function visit(coords) {
-        if (typeof coords[0] === "number") {
-            const [lng, lat] = coords;
-            if (lat < minLat)
-                minLat = lat;
-            if (lat > maxLat)
-                maxLat = lat;
-            if (lng < minLng)
-                minLng = lng;
-            if (lng > maxLng)
-                maxLng = lng;
+function groupBooksByCountry(books, centroids) {
+    const booksByCountry = new Map();
+    for (const book of books) {
+        const geoName = lookupCountryGeoName(book.country);
+        if (!geoName || !centroids.has(geoName)) {
+            console.warn(`No map position for "${book.title}" (Pays: "${book.country}")`);
+            continue;
         }
-        else {
-            for (const c of coords)
-                visit(c);
-        }
+        const existing = booksByCountry.get(geoName);
+        if (existing)
+            existing.push(book);
+        else
+            booksByCountry.set(geoName, [book]);
     }
-    visit(geometry.coordinates);
-    return { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
+    return booksByCountry;
 }
-function buildCountryCentroids(geojson) {
-    const centroids = new Map();
-    for (const feature of geojson.features) {
-        const name = feature.properties?.name;
-        if (typeof name === "string" && feature.geometry) {
-            centroids.set(name, computeCentroid(feature.geometry));
-        }
-    }
-    return centroids;
-}
-/** Deterministic string hash (djb2) so the same book always jitters to the
- * same spot across reloads. */
-function hashString(value, seed) {
-    let hash = seed;
-    for (let i = 0; i < value.length; i++) {
-        hash = (hash * 33) ^ value.charCodeAt(i);
-    }
-    return Math.abs(hash);
-}
-function jitteredPosition(centroid, seedKey) {
-    const angle = hashString(seedKey, 5381) % 360;
-    const radius = 0.3 + (hashString(seedKey, 52711) % 5) * 0.15;
-    const radians = (angle * Math.PI) / 180;
-    return [centroid.lat + radius * Math.sin(radians), centroid.lng + radius * Math.cos(radians)];
-}
-function renderDetailPanel(book) {
-    const panel = document.getElementById("book-detail");
-    if (!panel)
+function showBookOrList(countryBooks) {
+    if (countryBooks.length === 1) {
+        renderDetailPanel(countryBooks[0]);
         return;
-    panel.innerHTML = `
-    <button id="book-detail-close" aria-label="Fermer">&times;</button>
-    <img src="books/${book.imagePath}" alt="Couverture de ${escapeHtml(book.title)}" />
-    <h2>${escapeHtml(book.title)}</h2>
-    <p class="book-meta">${escapeHtml(book.author)} — ${escapeHtml(book.year)} — ${escapeHtml(book.country)}</p>
-    <p class="book-edition">Édition ${escapeHtml(book.edition)} (${escapeHtml(book.eventDate)})</p>
-    <div class="book-description">${escapeHtml(book.description).replace(/\n/g, "<br>")}</div>
-  `;
-    panel.hidden = false;
-    document.getElementById("book-detail-close")?.addEventListener("click", () => {
-        panel.hidden = true;
-    });
-}
-function escapeHtml(value) {
-    const div = document.createElement("div");
-    div.textContent = value;
-    return div.innerHTML;
+    }
+    const showList = () => renderBookList(countryBooks, countryBooks[0].country, (book) => renderDetailPanel(book, showList));
+    showList();
 }
 async function main() {
     const [manifest, geojson] = await Promise.all([
@@ -98,22 +54,23 @@ async function main() {
     ]);
     const centroids = buildCountryCentroids(geojson);
     const books = (await Promise.all(manifest.map(loadBook))).filter((b) => b !== null);
-    const map = L.map("map").setView([20, 10], 2);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-        maxZoom: 18,
-    }).addTo(map);
-    for (const book of books) {
-        const geoName = lookupCountryGeoName(book.country);
-        const centroid = geoName ? centroids.get(geoName) : undefined;
-        if (!centroid) {
-            console.warn(`No map position for "${book.title}" (Pays: "${book.country}")`);
-            continue;
-        }
-        const [lat, lng] = jitteredPosition(centroid, book.sourceFile);
-        const marker = L.marker([lat, lng]).addTo(map);
-        marker.on("click", () => renderDetailPanel(book));
-    }
+    const booksByCountry = groupBooksByCountry(books, centroids);
+    const markers = Array.from(booksByCountry, ([geoName, countryBooks]) => {
+        const centroid = centroids.get(geoName);
+        return { ...project(centroid.lat, centroid.lng), geoName, books: countryBooks };
+    });
+    const countries = geojson.features
+        .filter((feature) => typeof feature.properties?.name === "string" && feature.geometry)
+        .map((feature) => ({
+        name: feature.properties.name,
+        path: geometryToSvgPath(feature.geometry, project),
+    }));
+    const mapContainer = document.getElementById("map");
+    if (!mapContainer)
+        throw new Error("Missing #map container");
+    const mapView = createSvgMap(mapContainer, MAP_VIEWBOX);
+    mapView.renderCountries(countries, new Set(booksByCountry.keys()));
+    mapView.renderMarkers(markers, showBookOrList);
 }
 main().catch((error) => {
     console.error("Failed to initialize the map:", error);
