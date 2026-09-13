@@ -1,0 +1,17 @@
+{
+  "name": "book-club-map",
+  "version": "1.0.0",
+  "description": "Interactive map of books read by the Lecture d'ailleurs book club",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "parse": "node meetup_parser.js",
+    "serve": "npx http-server . -c-1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/leaflet": "^1.9.0"
+  }
+}
