@@ -47,10 +47,12 @@ header h1 { margin: 0; font-size: 1.1em; }
 #book-panel-toggle {
   position: fixed; top: 1em; right: 1em; z-index: 1100;
   width: 3em; height: 3em; border-radius: 50%; border: none;
-  background: #2f6fab; color: white; font-size: 1.3em; line-height: 1;
+  background: #2f6fab; color: white;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   transition: right 0.25s ease;
 }
+#book-panel-toggle svg { width: 1.3em; height: 1.3em; }
 #book-panel-toggle.open { right: calc(min(320px, 90vw) + 1em); }
 #book-detail-back {
   display: block; border: none; background: none; color: #2f6fab;
