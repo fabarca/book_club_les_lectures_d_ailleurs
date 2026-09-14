@@ -5,7 +5,7 @@ import { project, MAP_VIEWBOX } from "./lib/geoProjection.js";
 import { createSvgMap } from "./lib/svgMapView.js";
 import { renderDetailPanel, renderBookList } from "./lib/detailPanel.js";
 async function loadManifest() {
-    const response = await fetch("books/manifest.json");
+    const response = await fetch("manifest.json");
     if (!response.ok)
         throw new Error(`Failed to load manifest.json: HTTP ${response.status}`);
     return response.json();

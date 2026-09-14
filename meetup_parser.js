@@ -1,10 +1,11 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { parseBookMarkdown } from "./lib/bookParser.js";
+import { extractMeetupEventId, generateManifest } from "./generate_manifest.js";
 const GROUP_URLNAME = "club-de-lecture-les-lectures-d-ailleurs";
 const GRAPHQL_ENDPOINT = "https://www.meetup.com/gql2";
 const BOOKS_DIR = path.join(process.cwd(), "books");
-const MANIFEST_PATH = path.join(BOOKS_DIR, "manifest.json");
 const PLACEHOLDER = "À COMPLÉTER";
 const QUERY = `query getGroupEvents($urlname:String!,$first:Int,$after:String){
   groupByUrlname(urlname:$urlname){
@@ -82,11 +83,19 @@ function slugify(value) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 }
-async function loadManifest() {
-    if (!existsSync(MANIFEST_PATH))
-        return [];
-    const raw = await readFile(MANIFEST_PATH, "utf8");
-    return JSON.parse(raw);
+async function loadKnownEventIds() {
+    const knownEventIds = new Set();
+    if (!existsSync(BOOKS_DIR))
+        return knownEventIds;
+    const files = await readdir(BOOKS_DIR);
+    for (const file of files.filter((f) => f.endsWith(".md"))) {
+        const text = await readFile(path.join(BOOKS_DIR, file), "utf8");
+        const book = parseBookMarkdown(text, file);
+        const eventId = extractMeetupEventId(book.sourceUrl);
+        if (eventId)
+            knownEventIds.add(eventId);
+    }
+    return knownEventIds;
 }
 async function downloadImage(url, destPath) {
     const response = await fetch(url);
@@ -123,8 +132,7 @@ async function main() {
     console.log("Fetching events from Meetup (public, unauthenticated GraphQL)...");
     const events = await fetchAllEvents();
     console.log(`Found ${events.length} events.`);
-    const manifest = await loadManifest();
-    const knownEventIds = new Set(manifest.map((entry) => entry.meetupEventId));
+    const knownEventIds = await loadKnownEventIds();
     let created = 0;
     for (let index = 0; index < events.length; index++) {
         const event = events[index];
@@ -143,7 +151,7 @@ async function main() {
         const mdPath = path.join(BOOKS_DIR, mdFileName);
         const imagePath = path.join(BOOKS_DIR, imageFileName);
         if (existsSync(mdPath)) {
-            console.warn(`⚠ ${mdFileName} already exists on disk but wasn't in manifest.json — skipping to avoid overwriting it`);
+            console.warn(`⚠ ${mdFileName} already exists on disk — skipping to avoid overwriting it`);
             continue;
         }
         const photoUrl = event.featuredEventPhoto?.highResUrl;
@@ -163,14 +171,12 @@ async function main() {
             description: (event.description ?? "").trim(),
         });
         await writeFile(mdPath, markdown, "utf8");
-        manifest.push({ file: mdFileName, meetupEventId: event.id, editionNumber });
         knownEventIds.add(event.id);
         created++;
         console.log(`✓ Édition ${editionNumber}: ${book} — ${author}`);
         console.warn(`  ⚠ Pays/Année need manual completion in books/${mdFileName}`);
     }
-    manifest.sort((a, b) => b.editionNumber - a.editionNumber);
-    await writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+    const manifest = await generateManifest();
     console.log(`Done. ${created} new book(s) added, ${manifest.length} total in manifest.json.`);
 }
 main().catch((error) => {
