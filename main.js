@@ -3,7 +3,8 @@ import { lookupCountryGeoName } from "./lib/countryLookup.js";
 import { buildCountryCentroids, geometryToSvgPath } from "./lib/countryGeometry.js";
 import { project, MAP_VIEWBOX } from "./lib/geoProjection.js";
 import { createSvgMap } from "./lib/svgMapView.js";
-import { renderDetailPanel, renderBookList } from "./lib/detailPanel.js";
+import { renderBookListPanel } from "./lib/bookListPanel.js";
+import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
 async function loadManifest() {
     const response = await fetch("manifest.json");
     if (!response.ok)
@@ -39,14 +40,6 @@ function groupBooksByCountry(books, centroids) {
     }
     return booksByCountry;
 }
-function showBookOrList(countryBooks) {
-    if (countryBooks.length === 1) {
-        renderDetailPanel(countryBooks[0]);
-        return;
-    }
-    const showList = () => renderBookList(countryBooks, countryBooks[0].country, (book) => renderDetailPanel(book, showList));
-    showList();
-}
 async function main() {
     const [manifest, geojson] = await Promise.all([
         loadManifest(),
@@ -70,7 +63,45 @@ async function main() {
         throw new Error("Missing #map container");
     const mapView = createSvgMap(mapContainer, MAP_VIEWBOX);
     mapView.renderCountries(countries, new Set(booksByCountry.keys()));
-    mapView.renderMarkers(markers, showBookOrList);
+    const filterOptions = Array.from(booksByCountry, ([geoName, countryBooks]) => ({
+        geoName,
+        label: countryBooks[0].country,
+    })).sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    let currentFilterGeoName = null;
+    function showList() {
+        const visibleBooks = currentFilterGeoName === null ? books : booksByCountry.get(currentFilterGeoName) ?? [];
+        renderBookListPanel(visibleBooks, filterOptions, currentFilterGeoName, (geoName) => {
+            currentFilterGeoName = geoName;
+            showList();
+        }, (book) => renderBookDetailPanel(book, showList));
+    }
+    const bookPanel = document.getElementById("book-panel");
+    const bookPanelToggle = document.getElementById("book-panel-toggle");
+    function openPanel() {
+        bookPanel?.classList.add("open");
+        bookPanelToggle?.classList.add("open");
+    }
+    function closePanel() {
+        bookPanel?.classList.remove("open");
+        bookPanelToggle?.classList.remove("open");
+    }
+    bookPanelToggle?.addEventListener("click", () => {
+        if (bookPanel?.classList.contains("open"))
+            closePanel();
+        else
+            openPanel();
+    });
+    mapView.renderMarkers(markers, (geoName) => {
+        currentFilterGeoName = geoName;
+        showList();
+        openPanel();
+    });
+    mapView.onBackgroundClick(() => {
+        currentFilterGeoName = null;
+        showList();
+    });
+    showList();
+    openPanel();
 }
 main().catch((error) => {
     console.error("Failed to initialize the map:", error);

@@ -38,7 +38,10 @@ export interface MarkerInput {
 
 export interface SvgMapView {
   renderCountries(countries: CountryFeatureInput[], countriesWithBooks: Set<string>): void;
-  renderMarkers(markers: MarkerInput[], onMarkerClick: (books: Book[]) => void): void;
+  renderMarkers(markers: MarkerInput[], onMarkerClick: (geoName: string) => void): void;
+  /** Registers a callback fired when the user clicks the map somewhere that
+   * isn't a marker (a country without books, or open background/ocean). */
+  onBackgroundClick(callback: () => void): void;
 }
 
 interface ViewBox {
@@ -83,11 +86,18 @@ export function createSvgMap(container: HTMLElement, viewBox: string): SvgMapVie
   // setupPanAndZoom's zoomRatio).
   const markerScaleGroups: SVGGElement[] = [tooltipScaleGroup];
 
-  setupPanAndZoom(svg, parseViewBox(viewBox), (zoomRatio) => {
-    for (const group of markerScaleGroups) {
-      group.setAttribute("transform", `scale(${zoomRatio})`);
-    }
-  });
+  let backgroundClickCallback: (() => void) | null = null;
+
+  setupPanAndZoom(
+    svg,
+    parseViewBox(viewBox),
+    (zoomRatio) => {
+      for (const group of markerScaleGroups) {
+        group.setAttribute("transform", `scale(${zoomRatio})`);
+      }
+    },
+    () => backgroundClickCallback?.(),
+  );
 
   return {
     renderCountries(countries, countriesWithBooks) {
@@ -119,7 +129,7 @@ export function createSvgMap(container: HTMLElement, viewBox: string): SvgMapVie
 
         group.addEventListener("click", (event) => {
           event.stopPropagation();
-          onMarkerClick(marker.books);
+          onMarkerClick(marker.geoName);
         });
         // SVG has no z-index: paint order follows document order, so
         // bringing a marker in front on hover means moving it to be the
@@ -138,6 +148,9 @@ export function createSvgMap(container: HTMLElement, viewBox: string): SvgMapVie
         });
         markersGroup.appendChild(group);
       }
+    },
+    onBackgroundClick(callback) {
+      backgroundClickCallback = callback;
     },
   };
 }
@@ -225,11 +238,13 @@ function setupPanAndZoom(
   svg: SVGSVGElement,
   initialViewBox: ViewBox,
   onZoomChange: (zoomRatio: number) => void,
+  onBackgroundClick: () => void,
 ): void {
   let viewBox: ViewBox = { ...initialViewBox };
   const minWidth = initialViewBox.width / MAX_ZOOM_SCALE;
   const maxWidth = initialViewBox.width;
   let isDragging = false;
+  let hasDragged = false;
   let lastPointer = { x: 0, y: 0 };
 
   function clientToSvgPoint(clientX: number, clientY: number): { x: number; y: number } {
@@ -273,6 +288,7 @@ function setupPanAndZoom(
     if (event.target instanceof Element && event.target.closest(".marker")) return;
 
     isDragging = true;
+    hasDragged = false;
     lastPointer = { x: event.clientX, y: event.clientY };
     svg.classList.add("dragging");
     svg.setPointerCapture(event.pointerId);
@@ -280,6 +296,7 @@ function setupPanAndZoom(
 
   svg.addEventListener("pointermove", (event) => {
     if (!isDragging) return;
+    hasDragged = true;
     const rect = svg.getBoundingClientRect();
     const dx = ((event.clientX - lastPointer.x) / rect.width) * viewBox.width;
     const dy = ((event.clientY - lastPointer.y) / rect.height) * viewBox.height;
@@ -300,4 +317,13 @@ function setupPanAndZoom(
   }
   svg.addEventListener("pointerup", endDrag);
   svg.addEventListener("pointerleave", endDrag);
+
+  svg.addEventListener("click", () => {
+    // Marker clicks call stopPropagation, so only clicks on empty
+    // background or a country without a marker reach here. A pan-drag
+    // gesture also ends in a "click" on svg (setPointerCapture retargets
+    // it there), which hasDragged filters out.
+    if (hasDragged) return;
+    onBackgroundClick();
+  });
 }
