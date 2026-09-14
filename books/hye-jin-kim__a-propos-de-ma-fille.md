@@ -1,7 +1,8 @@
 # Livre: À propos de ma fille
 ![Couverture](hye-jin-kim__a-propos-de-ma-fille.jpg)
 Édition: 5
-Date l'événement: 2022-06-18T17:00:00+02:00
+Date l'événement: 2022-06-18
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/286059120/
 Auteur: Hye-Jin Kim
 Année: 2017
 Pays: Corée du Sud

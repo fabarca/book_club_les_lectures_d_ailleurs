@@ -1,7 +1,8 @@
 # Livre: Le Triomphe des imbéciles
 ![Couverture](samir-kacimi__le-triomphe-des-imbeciles.jpg)
 Édition: 27
-Date l'événement: 2024-07-20T17:00:00+02:00
+Date l'événement: 2024-07-20
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/301810721/
 Auteur: Samir Kacimi
 Année: 2020
 Pays: Algérie

@@ -1,7 +1,8 @@
 # Livre: Ces gens-là
 ![Couverture](chico-buarque__ces-gens-la.jpg)
 Édition: 15
-Date l'événement: 2023-05-20T17:00:00+02:00
+Date l'événement: 2023-05-20
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/293077576/
 Auteur: Chico Buarque
 Année: 2019
 Pays: Brésil

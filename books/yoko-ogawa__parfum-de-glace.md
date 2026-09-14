@@ -1,7 +1,8 @@
 # Livre: Parfum de glace
 ![Couverture](yoko-ogawa__parfum-de-glace.jpg)
 Édition: 21
-Date l'événement: 2024-01-27T17:00:00+01:00
+Date l'événement: 2024-01-27
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/297863786/
 Auteur: Yoko Ogawa
 Année: 1998
 Pays: Japon

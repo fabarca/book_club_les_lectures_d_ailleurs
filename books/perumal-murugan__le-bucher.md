@@ -1,7 +1,8 @@
 # Livre: Le bûcher
 ![Couverture](perumal-murugan__le-bucher.jpg)
 Édition: 7
-Date l'événement: 2022-09-17T17:00:00+02:00
+Date l'événement: 2022-09-17
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/287370457/
 Auteur: Perumal Murugan
 Année: 2013
 Pays: Inde

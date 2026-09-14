@@ -1,7 +1,8 @@
 # Livre: Animal du cœur
 ![Couverture](herta-muller__animal-du-c-ur.jpg)
 Édition: 38
-Date l'événement: 2025-07-05T17:00:00+02:00
+Date l'événement: 2025-07-05
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/308516979/
 Auteur: Herta Müller
 Année: 1994
 Pays: Allemagne

@@ -1,7 +1,8 @@
 # Livre: Sillages
 ![Couverture](kallia-papadaki__sillages.jpg)
 Édition: 13
-Date l'événement: 2023-03-18T17:00:00+01:00
+Date l'événement: 2023-03-18
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/291714517/
 Auteur: Kallia Papadaki
 Année: 2015
 Pays: Grèce

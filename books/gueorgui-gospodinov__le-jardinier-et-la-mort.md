@@ -1,7 +1,8 @@
 # Livre: Le jardinier et la mort
 ![Couverture](gueorgui-gospodinov__le-jardinier-et-la-mort.jpg)
 Édition: 42
-Date l'événement: 2025-12-06T17:00:00+01:00
+Date l'événement: 2025-12-06
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/312032905/
 Auteur: Guéorgui Gospodinov
 Année: 2024
 Pays: Bulgarie

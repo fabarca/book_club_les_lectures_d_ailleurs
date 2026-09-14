@@ -1,7 +1,8 @@
 # Livre: Miracle à la Combe aux Aspics
 ![Couverture](ante-tomic__miracle-a-la-combe-aux-aspics.jpg)
 Édition: 26
-Date l'événement: 2024-06-22T17:00:00+02:00
+Date l'événement: 2024-06-22
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/301252387/
 Auteur: Ante Tomic
 Année: 2009
 Pays: Croatie

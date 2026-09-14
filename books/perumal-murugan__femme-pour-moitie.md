@@ -1,7 +1,8 @@
 # Livre: Femme pour moitié
 ![Couverture](perumal-murugan__femme-pour-moitie.jpg)
 Édition: 36
-Date l'événement: 2025-05-10T17:00:00+02:00
+Date l'événement: 2025-05-10
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/307261967/
 Auteur: Perumal Murugan
 Année: 2010
 Pays: Inde

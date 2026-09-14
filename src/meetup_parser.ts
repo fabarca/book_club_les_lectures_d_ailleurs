@@ -117,19 +117,29 @@ async function downloadImage(url: string, destPath: string): Promise<void> {
   await writeFile(destPath, buffer);
 }
 
+function eventUrl(eventId: string): string {
+  return `https://www.meetup.com/${GROUP_URLNAME}/events/${eventId}/`;
+}
+
+function toDateOnly(isoDateTime: string): string {
+  return isoDateTime.slice(0, 10);
+}
+
 function buildMarkdown(params: {
   book: string;
   author: string;
   imageFileName: string;
   edition: number;
   eventDate: string;
+  sourceUrl: string;
   description: string;
 }): string {
-  const { book, author, imageFileName, edition, eventDate, description } = params;
+  const { book, author, imageFileName, edition, eventDate, sourceUrl, description } = params;
   return `# Livre: ${book}
 ![Couverture](${imageFileName})
 Édition: ${edition}
-Date l'événement: ${eventDate}
+Date l'événement: ${toDateOnly(eventDate)}
+Lien: ${sourceUrl}
 Auteur: ${author}
 Année: ${PLACEHOLDER}
 Pays: ${PLACEHOLDER}
@@ -187,6 +197,7 @@ async function main(): Promise<void> {
       imageFileName,
       edition: editionNumber,
       eventDate: event.dateTime,
+      sourceUrl: eventUrl(event.id),
       description: (event.description ?? "").trim(),
     });
     await writeFile(mdPath, markdown, "utf8");

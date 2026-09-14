@@ -1,7 +1,8 @@
 # Livre: Pedro Páramo
 ![Couverture](juan-ruflo__pedro-paramo.jpg)
 Édition: 30
-Date l'événement: 2024-11-02T17:00:00+01:00
+Date l'événement: 2024-11-02
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/303860123/
 Auteur: Juan Ruflo
 Année: 1955
 Pays: Mexique

@@ -1,7 +1,8 @@
 # Livre: La Petite Fille blanche
 ![Couverture](tony-birch__la-petite-fille-blanche.jpg)
 Édition: 45
-Date l'événement: 2026-03-21T17:00:00+01:00
+Date l'événement: 2026-03-21
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/313473392/
 Auteur: Tony Birch
 Année: 2019
 Pays: Australie

@@ -1,7 +1,8 @@
 # Livre: Une si longue lettre
 ![Couverture](mariama-ba__une-si-longue-lettre.jpg)
 Édition: 19
-Date l'événement: 2023-11-11T17:00:00+01:00
+Date l'événement: 2023-11-11
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/296734672/
 Auteur: Mariama Bâ
 Année: 1979
 Pays: Sénégal

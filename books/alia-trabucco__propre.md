@@ -1,7 +1,8 @@
 # Livre: Propre
 ![Couverture](alia-trabucco__propre.jpg)
 Édition: 37
-Date l'événement: 2025-06-14T17:00:00+02:00
+Date l'événement: 2025-06-14
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/307764031/
 Auteur: Alia Trabucco
 Année: 2022
 Pays: Chili

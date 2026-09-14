@@ -1,7 +1,8 @@
 # Livre: Junil
 ![Couverture](joan-lluis-lluis__junil.jpg)
 Édition: 34
-Date l'événement: 2025-03-08T17:00:00+01:00
+Date l'événement: 2025-03-08
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/306078931/
 Auteur: Joan-Lluís Lluís
 Année: 2021
 Pays: France

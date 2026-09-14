@@ -22,6 +22,7 @@ Format des fichiers markdown:
 {image}
 Édition: {event_number}
 Date l'événement: {event_date}
+Lien: {event_url}
 Auteur: {author}
 Année: {book_year}
 Pays: {author_country}

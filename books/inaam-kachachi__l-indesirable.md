@@ -1,7 +1,8 @@
 # Livre: L'Indésirable
 ![Couverture](inaam-kachachi__l-indesirable.jpg)
 Édition: 32
-Date l'événement: 2025-01-11T17:00:00+01:00
+Date l'événement: 2025-01-11
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/304981113/
 Auteur: Inaam Kachachi
 Année: 2017
 Pays: Irak

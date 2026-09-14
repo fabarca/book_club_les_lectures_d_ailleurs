@@ -1,7 +1,8 @@
 # Livre: Une ville à soi
 ![Couverture](chi-li__une-ville-a-soi.jpg)
 Édition: 16
-Date l'événement: 2023-06-17T17:00:00+02:00
+Date l'événement: 2023-06-17
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/293668435/
 Auteur: Chi Li
 Année: 2011
 Pays: Chine

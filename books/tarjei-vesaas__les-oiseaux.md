@@ -1,7 +1,8 @@
 # Livre: Les oiseaux
 ![Couverture](tarjei-vesaas__les-oiseaux.jpg)
 Édition: 8
-Date l'événement: 2022-10-23T17:00:00+02:00
+Date l'événement: 2022-10-23
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/288547779/
 Auteur: Tarjei Vesaas
 Année: 1957
 Pays: Norvège

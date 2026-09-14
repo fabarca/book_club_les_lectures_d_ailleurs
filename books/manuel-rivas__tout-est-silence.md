@@ -1,7 +1,8 @@
 # Livre: Tout est silence
 ![Couverture](manuel-rivas__tout-est-silence.jpg)
 Édition: 22
-Date l'événement: 2024-02-24T17:00:00+01:00
+Date l'événement: 2024-02-24
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/298828277/
 Auteur: Manuel Rivas
 Année: 2010
 Pays: Espagne

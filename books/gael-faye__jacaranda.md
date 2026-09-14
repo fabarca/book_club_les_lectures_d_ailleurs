@@ -1,7 +1,8 @@
 # Livre: Jacaranda
 ![Couverture](gael-faye__jacaranda.jpg)
 Édition: 35
-Date l'événement: 2025-04-12T17:00:00+02:00
+Date l'événement: 2025-04-12
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/306621308/
 Auteur: Gaël Faye
 Année: 2024
 Pays: Rwanda

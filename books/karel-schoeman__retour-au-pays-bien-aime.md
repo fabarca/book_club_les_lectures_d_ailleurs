@@ -1,7 +1,8 @@
 # Livre: Retour au pays bien-aimé
 ![Couverture](karel-schoeman__retour-au-pays-bien-aime.jpg)
 Édition: 12
-Date l'événement: 2023-02-18T17:00:00+01:00
+Date l'événement: 2023-02-18
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/290945129/
 Auteur: Karel Schoeman
 Année: 1972
 Pays: Afrique du Sud

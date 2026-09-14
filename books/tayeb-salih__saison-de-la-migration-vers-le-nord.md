@@ -1,7 +1,8 @@
 # Livre: Saison de la migration vers le nord
 ![Couverture](tayeb-salih__saison-de-la-migration-vers-le-nord.jpg)
 Édition: 40
-Date l'événement: 2025-10-11T17:00:00+02:00
+Date l'événement: 2025-10-11
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/311033556/
 Auteur: Tayeb Salih
 Année: 1966
 Pays: Soudan

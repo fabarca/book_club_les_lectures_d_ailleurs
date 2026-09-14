@@ -8,6 +8,7 @@ export interface Book {
   description: string;
   imagePath: string;
   sourceFile: string;
+  sourceUrl: string;
 }
 
 export interface ManifestEntry {

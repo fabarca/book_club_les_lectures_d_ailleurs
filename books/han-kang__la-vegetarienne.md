@@ -1,7 +1,8 @@
 # Livre: La Végétarienne
 ![Couverture](han-kang__la-vegetarienne.jpg)
 Édition: 31
-Date l'événement: 2024-12-07T17:00:00+01:00
+Date l'événement: 2024-12-07
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/304356018/
 Auteur: Han Kang
 Année: 2007
 Pays: Corée du Sud

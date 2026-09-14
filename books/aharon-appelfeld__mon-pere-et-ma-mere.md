@@ -1,7 +1,8 @@
 # Livre: Mon père et ma mère
 ![Couverture](aharon-appelfeld__mon-pere-et-ma-mere.jpg)
 Édition: 2
-Date l'événement: 2022-04-02T17:00:00+02:00
+Date l'événement: 2022-04-02
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/284429077/
 Auteur: Aharon Appelfeld
 Année: 2013
 Pays: Israël

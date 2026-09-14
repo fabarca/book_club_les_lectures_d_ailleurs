@@ -1,7 +1,8 @@
 # Livre: Saison toxique pour les foetus
 ![Couverture](vera-bogdanova__saison-toxique-pour-les-foetus.jpg)
 Édition: 29
-Date l'événement: 2024-10-05T17:00:00+02:00
+Date l'événement: 2024-10-05
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/303308827/
 Auteur: Vera Bogdanova
 Année: 2022
 Pays: Russie

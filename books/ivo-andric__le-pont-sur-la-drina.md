@@ -1,7 +1,8 @@
 # Livre: Le Pont sur la Drina
 ![Couverture](ivo-andric__le-pont-sur-la-drina.jpg)
 Édition: 47
-Date l'événement: 2026-06-06T17:00:00+02:00
+Date l'événement: 2026-06-06
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/314606570/
 Auteur: Ivo Andric
 Année: 1945
 Pays: Bosnie-Herzégovine

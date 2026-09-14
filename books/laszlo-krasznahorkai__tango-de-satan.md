@@ -1,7 +1,8 @@
 # Livre: Tango de Satan
 ![Couverture](laszlo-krasznahorkai__tango-de-satan.jpg)
 Édition: 44
-Date l'événement: 2026-02-21T17:00:00+01:00
+Date l'événement: 2026-02-21
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/312827957/
 Auteur: László Krasznahorkai
 Année: 1985
 Pays: Hongrie

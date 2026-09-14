@@ -1,7 +1,8 @@
 # Livre: La place du diamant
 ![Couverture](merce-rodoreda__la-place-du-diamant.jpg)
 Édition: 3
-Date l'événement: 2022-04-30T17:00:00+02:00
+Date l'événement: 2022-04-30
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/285023909/
 Auteur: Mercè Rodoreda
 Année: 1962
 Pays: Espagne

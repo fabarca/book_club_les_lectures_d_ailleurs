@@ -1,7 +1,8 @@
 # Livre: La femme aux cheveux roux
 ![Couverture](orhan-pamuk__la-femme-aux-cheveux-roux.jpg)
 Édition: 17
-Date l'événement: 2023-09-16T17:00:00+02:00
+Date l'événement: 2023-09-16
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/294252169/
 Auteur: Orhan Pamuk
 Année: 2016
 Pays: Turquie

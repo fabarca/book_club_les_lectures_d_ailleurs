@@ -1,7 +1,8 @@
 # Livre: Les Filles d’Égalie
 ![Couverture](gerd-brantenberg__les-filles-d-egalie.jpg)
 Édition: 39
-Date l'événement: 2025-09-13T17:00:00+02:00
+Date l'événement: 2025-09-13
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/308926043/
 Auteur: Gerd Brantenberg
 Année: 1977
 Pays: Norvège

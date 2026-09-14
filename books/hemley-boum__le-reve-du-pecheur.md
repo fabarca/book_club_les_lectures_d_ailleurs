@@ -1,7 +1,8 @@
 # Livre: Le rêve du pêcheur
 ![Couverture](hemley-boum__le-reve-du-pecheur.jpg)
 Édition: 28
-Date l'événement: 2024-09-07T17:00:00+02:00
+Date l'événement: 2024-09-07
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/302364002/
 Auteur: Hemley Boum
 Année: 2024
 Pays: Cameroun

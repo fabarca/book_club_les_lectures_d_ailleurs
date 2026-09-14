@@ -1,7 +1,8 @@
 # Livre: La Vie et les Agissements d’Ilie Cazane
 ![Couverture](razvan-radulescu__la-vie-et-les-agissements-d-ilie-cazane.jpg)
 Édition: 20
-Date l'événement: 2023-12-09T17:00:00+01:00
+Date l'événement: 2023-12-09
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/297302058/
 Auteur: Razvan Radulescu
 Année: 1997
 Pays: Roumanie

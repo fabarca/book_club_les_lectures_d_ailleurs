@@ -1,7 +1,8 @@
 # Livre: Kallocaïne
 ![Couverture](karin-boye__kallocaine.jpg)
 Édition: 33
-Date l'événement: 2025-02-08T17:00:00+01:00
+Date l'événement: 2025-02-08
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/305566700/
 Auteur: Karin Boye
 Année: 1940
 Pays: Suède

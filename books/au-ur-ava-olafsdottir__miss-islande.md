@@ -1,7 +1,8 @@
 # Livre: Miss Islande
 ![Couverture](au-ur-ava-olafsdottir__miss-islande.jpg)
 Édition: 11
-Date l'événement: 2023-01-14T17:00:00+01:00
+Date l'événement: 2023-01-14
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/290392317/
 Auteur: Auður Ava Ólafsdóttir
 Année: 2018
 Pays: Islande

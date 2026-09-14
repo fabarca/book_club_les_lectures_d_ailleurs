@@ -1,7 +1,8 @@
 # Livre: Le pingouin
 ![Couverture](andrei-kourkov__le-pingouin.jpg)
 Édition: 4
-Date l'événement: 2022-05-21T17:00:00+02:00
+Date l'événement: 2022-05-21
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/285626680/
 Auteur: Andreï Kourkov
 Année: 1996
 Pays: Ukraine

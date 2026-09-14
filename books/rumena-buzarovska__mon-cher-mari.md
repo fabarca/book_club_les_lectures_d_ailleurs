@@ -1,7 +1,8 @@
 # Livre: Mon cher mari
 ![Couverture](rumena-buzarovska__mon-cher-mari.jpg)
 Édition: 9
-Date l'événement: 2022-11-19T17:00:00+01:00
+Date l'événement: 2022-11-19
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/289297141/
 Auteur: Rumena Bužarovska
 Année: 2014
 Pays: Macédoine du Nord

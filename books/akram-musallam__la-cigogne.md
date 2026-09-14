@@ -1,7 +1,8 @@
 # Livre: La Cigogne
 ![Couverture](akram-musallam__la-cigogne.jpg)
 Édition: 23
-Date l'événement: 2024-03-24T17:00:00+01:00
+Date l'événement: 2024-03-24
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/299415334/
 Auteur: Akram Musallam
 Année: 2012
 Pays: Palestine

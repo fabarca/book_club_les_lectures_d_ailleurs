@@ -1,7 +1,8 @@
 # Livre: Turbulences
 ![Couverture](eshkol-nevo__turbulences.jpg)
 Édition: 24
-Date l'événement: 2024-04-20T17:00:00+02:00
+Date l'événement: 2024-04-20
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/299993979/
 Auteur: Eshkol Nevo
 Année: 2015
 Pays: Israël

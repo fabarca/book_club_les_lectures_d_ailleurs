@@ -1,7 +1,8 @@
 # Livre: À la recherche du vivant
 ![Couverture](iida-turpeinen__a-la-recherche-du-vivant.jpg)
 Édition: 46
-Date l'événement: 2026-05-02T17:00:00+02:00
+Date l'événement: 2026-05-02
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/313892586/
 Auteur: Iida Turpeinen
 Année: 2023
 Pays: Finlande

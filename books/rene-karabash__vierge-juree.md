@@ -1,7 +1,8 @@
 # Livre: Vierge jurée
 ![Couverture](rene-karabash__vierge-juree.jpg)
 Édition: 6
-Date l'événement: 2022-07-23T17:00:00+02:00
+Date l'événement: 2022-07-23
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/286656407/
 Auteur: Rene Karabash
 Année: 2018
 Pays: Bulgarie

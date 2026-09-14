@@ -60,5 +60,6 @@ export function parseBookMarkdown(text: string, sourceFile: string): Book {
     description,
     imagePath,
     sourceFile,
+    sourceUrl: fields["Lien"] ?? "",
   };
 }

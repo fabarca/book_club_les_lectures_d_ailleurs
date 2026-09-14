@@ -1,7 +1,8 @@
 # Livre: Paradis
 ![Couverture](abdulrazak-gurnah__paradis.jpg)
 Édition: 49
-Date l'événement: 2026-09-12T17:00:00+02:00
+Date l'événement: 2026-09-12
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/315554713/
 Auteur: Abdulrazak Gurnah
 Année: 2020
 Pays: Tanzanie

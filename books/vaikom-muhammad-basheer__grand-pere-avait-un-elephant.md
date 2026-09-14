@@ -1,7 +1,8 @@
 # Livre: Grand-père avait un éléphant
 ![Couverture](vaikom-muhammad-basheer__grand-pere-avait-un-elephant.jpg)
 Édition: 18
-Date l'événement: 2023-10-14T17:00:00+02:00
+Date l'événement: 2023-10-14
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/296158945/
 Auteur: Vaikom Muhammad Basheer
 Année: 1951
 Pays: Inde

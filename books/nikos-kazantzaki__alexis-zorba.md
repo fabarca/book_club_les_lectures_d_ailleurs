@@ -1,7 +1,8 @@
 # Livre: Alexis Zorba
 ![Couverture](nikos-kazantzaki__alexis-zorba.jpg)
 Édition: 1
-Date l'événement: 2022-03-05T17:00:00+01:00
+Date l'événement: 2022-03-05
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/283588833/
 Auteur: Nikos Kazantzaki
 Année: 1946
 Pays: Grèce

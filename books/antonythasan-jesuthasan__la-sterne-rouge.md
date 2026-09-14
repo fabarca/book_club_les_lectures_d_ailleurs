@@ -1,7 +1,8 @@
 # Livre: La Sterne rouge
 ![Couverture](antonythasan-jesuthasan__la-sterne-rouge.jpg)
 Édition: 25
-Date l'événement: 2024-05-25T17:00:00+02:00
+Date l'événement: 2024-05-25
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/300538973/
 Auteur: Antonythasan Jesuthasan
 Année: 2022
 Pays: Sri Lanka

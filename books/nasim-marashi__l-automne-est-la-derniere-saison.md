@@ -1,7 +1,8 @@
 # Livre: L'automne est la dernière saison
 ![Couverture](nasim-marashi__l-automne-est-la-derniere-saison.jpg)
 Édition: 14
-Date l'événement: 2023-04-22T17:00:00+02:00
+Date l'événement: 2023-04-22
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/292327003/
 Auteur: Nasim Marashi
 Année: 2015
 Pays: Iran

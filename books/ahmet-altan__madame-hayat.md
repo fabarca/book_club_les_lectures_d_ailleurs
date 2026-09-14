@@ -1,7 +1,8 @@
 # Livre: Madame Hayat
 ![Couverture](ahmet-altan__madame-hayat.jpg)
 Édition: 41
-Date l'événement: 2025-11-15T17:00:00+01:00
+Date l'événement: 2025-11-15
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/311500309/
 Auteur: Ahmet Altan
 Année: 2021
 Pays: Turquie

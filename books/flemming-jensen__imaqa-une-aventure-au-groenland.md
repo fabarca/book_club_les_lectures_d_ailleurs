@@ -1,7 +1,8 @@
 # Livre: Imaqa : Une aventure au Groenland
 ![Couverture](flemming-jensen__imaqa-une-aventure-au-groenland.jpg)
 Édition: 43
-Date l'événement: 2026-01-10T17:00:00+01:00
+Date l'événement: 2026-01-10
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/312336539/
 Auteur: Flemming Jensen
 Année: 1999
 Pays: Danemark

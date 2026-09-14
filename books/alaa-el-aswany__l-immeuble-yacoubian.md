@@ -1,7 +1,8 @@
 # Livre: L'immeuble Yacoubian
 ![Couverture](alaa-el-aswany__l-immeuble-yacoubian.jpg)
 Édition: 10
-Date l'événement: 2022-12-17T17:00:00+01:00
+Date l'événement: 2022-12-17
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/289856121/
 Auteur: Alaa El Aswany
 Année: 2002
 Pays: Égypte

@@ -1,7 +1,8 @@
 # Livre: Fin d'un jeu
 ![Couverture](julio-cortazar__fin-d-un-jeu.jpg)
 Édition: 48
-Date l'événement: 2026-07-04T17:00:00+02:00
+Date l'événement: 2026-07-04
+Lien: https://www.meetup.com/club-de-lecture-les-lectures-d-ailleurs/events/315142747/
 Auteur: Julio Cortázar
 Année: 1956
 Pays: Argentine
