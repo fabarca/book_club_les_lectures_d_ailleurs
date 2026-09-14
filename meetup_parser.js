@@ -6,16 +6,16 @@ const GRAPHQL_ENDPOINT = "https://www.meetup.com/gql2";
 const BOOKS_DIR = path.join(process.cwd(), "books");
 const MANIFEST_PATH = path.join(BOOKS_DIR, "manifest.json");
 const PLACEHOLDER = "À COMPLÉTER";
-const QUERY = `query getGroupPastEvents($urlname:String!,$first:Int,$after:String){
+const QUERY = `query getGroupEvents($urlname:String!,$first:Int,$after:String){
   groupByUrlname(urlname:$urlname){
     id
-    events(filter:{status:[PAST]},first:$first,after:$after){
+    events(filter:{status:[PAST,ACTIVE]},first:$first,after:$after){
       pageInfo{hasNextPage endCursor}
       edges{node{id title dateTime description featuredEventPhoto{highResUrl}}}
     }
   }
 }`;
-async function fetchAllPastEvents() {
+async function fetchAllEvents() {
     const events = [];
     let after = null;
     for (;;) {
@@ -23,7 +23,7 @@ async function fetchAllPastEvents() {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
             body: JSON.stringify({
-                operationName: "getGroupPastEvents",
+                operationName: "getGroupEvents",
                 variables: { urlname: GROUP_URLNAME, first: 100, after },
                 query: QUERY,
             }),
@@ -120,9 +120,9 @@ ${description}
 }
 async function main() {
     await mkdir(BOOKS_DIR, { recursive: true });
-    console.log("Fetching past events from Meetup (public, unauthenticated GraphQL)...");
-    const events = await fetchAllPastEvents();
-    console.log(`Found ${events.length} past events.`);
+    console.log("Fetching events from Meetup (public, unauthenticated GraphQL)...");
+    const events = await fetchAllEvents();
+    console.log(`Found ${events.length} events.`);
     const manifest = await loadManifest();
     const knownEventIds = new Set(manifest.map((entry) => entry.meetupEventId));
     let created = 0;
