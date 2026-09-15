@@ -247,6 +247,12 @@ function setupPanAndZoom(
   let hasDragged = false;
   let lastPointer = { x: 0, y: 0 };
 
+  // Pointers currently touching the map, keyed by pointerId. Two active
+  // pointers means a pinch gesture; drag-to-pan only applies with one.
+  const activePointers = new Map<number, { x: number; y: number }>();
+  let lastPinchDistance: number | null = null;
+  let lastPinchMidpoint: { x: number; y: number } | null = null;
+
   function clientToSvgPoint(clientX: number, clientY: number): { x: number; y: number } {
     const rect = svg.getBoundingClientRect();
     return {
@@ -255,34 +261,49 @@ function setupPanAndZoom(
     };
   }
 
+  // Zooms so that `focal` (an svg-space point) stays under the same spot on
+  // screen, clamping the resulting viewBox width to the configured range.
+  function applyZoom(newWidth: number, focal: { x: number; y: number }): void {
+    const clampedWidth = clamp(newWidth, minWidth, maxWidth);
+    const ratio = clampedWidth / viewBox.width;
+    viewBox = {
+      x: focal.x - (focal.x - viewBox.x) * ratio,
+      y: focal.y - (focal.y - viewBox.y) * ratio,
+      width: clampedWidth,
+      height: viewBox.height * ratio,
+    };
+    setViewBox(svg, viewBox);
+    // Markers are drawn in map-space units, which shrink on screen as we
+    // zoom in (viewBox.width shrinks while the svg's own pixel size stays
+    // fixed). Scaling their local geometry down by the same ratio the
+    // viewBox shrank by cancels that out, keeping their on-screen size
+    // constant.
+    onZoomChange(viewBox.width / initialViewBox.width);
+  }
+
   svg.addEventListener(
     "wheel",
     (event) => {
       event.preventDefault();
       const zoomFactor = event.deltaY < 0 ? 0.9 : 1 / 0.9;
-      const newWidth = clamp(viewBox.width * zoomFactor, minWidth, maxWidth);
-      if (newWidth === viewBox.width) return;
-
-      const cursor = clientToSvgPoint(event.clientX, event.clientY);
-      const ratio = newWidth / viewBox.width;
-      viewBox = {
-        x: cursor.x - (cursor.x - viewBox.x) * ratio,
-        y: cursor.y - (cursor.y - viewBox.y) * ratio,
-        width: newWidth,
-        height: viewBox.height * ratio,
-      };
-      setViewBox(svg, viewBox);
-      // Markers are drawn in map-space units, which shrink on screen as we
-      // zoom in (viewBox.width shrinks while the svg's own pixel size stays
-      // fixed). Scaling their local geometry down by the same ratio the
-      // viewBox shrank by cancels that out, keeping their on-screen size
-      // constant.
-      onZoomChange(viewBox.width / initialViewBox.width);
+      applyZoom(viewBox.width * zoomFactor, clientToSvgPoint(event.clientX, event.clientY));
     },
     { passive: false },
   );
 
   svg.addEventListener("pointerdown", (event) => {
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activePointers.size >= 2) {
+      // A second finger just landed: stop any single-finger pan and start a
+      // pinch instead. Distance/midpoint are captured fresh on the next move
+      // so the gesture doesn't jump.
+      isDragging = false;
+      lastPinchDistance = null;
+      lastPinchMidpoint = null;
+      return;
+    }
+
     // Capturing the pointer here would retarget the eventual "click" (used
     // by markers) onto the svg itself, so markers would never see it.
     if (event.target instanceof Element && event.target.closest(".marker")) return;
@@ -295,6 +316,31 @@ function setupPanAndZoom(
   });
 
   svg.addEventListener("pointermove", (event) => {
+    if (activePointers.has(event.pointerId)) {
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+
+    if (activePointers.size >= 2) {
+      hasDragged = true;
+      const [a, b] = Array.from(activePointers.values());
+      const distance = Math.hypot(a.x - b.x, a.y - b.y);
+      const midpoint = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+
+      if (lastPinchDistance !== null && lastPinchMidpoint !== null) {
+        const rect = svg.getBoundingClientRect();
+        const dx = ((midpoint.x - lastPinchMidpoint.x) / rect.width) * viewBox.width;
+        const dy = ((midpoint.y - lastPinchMidpoint.y) / rect.height) * viewBox.height;
+        viewBox = { ...viewBox, x: viewBox.x - dx, y: viewBox.y - dy };
+
+        const zoomFactor = distance > 0 ? lastPinchDistance / distance : 1;
+        applyZoom(viewBox.width * zoomFactor, clientToSvgPoint(midpoint.x, midpoint.y));
+      }
+
+      lastPinchDistance = distance;
+      lastPinchMidpoint = midpoint;
+      return;
+    }
+
     if (!isDragging) return;
     hasDragged = true;
     const rect = svg.getBoundingClientRect();
@@ -306,16 +352,35 @@ function setupPanAndZoom(
   });
 
   function endDrag(event: PointerEvent): void {
-    // pointerleave fires whenever the cursor exits the svg, even when
-    // nothing was being dragged (e.g. just hovering a marker then moving
-    // away) — release only when we actually captured the pointer, otherwise
-    // releasePointerCapture throws.
+    activePointers.delete(event.pointerId);
+    if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId);
+
+    if (activePointers.size >= 2) {
+      // Still pinching with the remaining pointers: resync on the next move.
+      lastPinchDistance = null;
+      lastPinchMidpoint = null;
+      return;
+    }
+
+    if (activePointers.size === 1) {
+      // One finger left after a pinch: resume single-finger panning from
+      // its current position instead of jumping to it.
+      const [remaining] = activePointers.values();
+      lastPointer = remaining;
+      isDragging = true;
+      lastPinchDistance = null;
+      lastPinchMidpoint = null;
+      return;
+    }
+
+    lastPinchDistance = null;
+    lastPinchMidpoint = null;
     if (!isDragging) return;
     isDragging = false;
     svg.classList.remove("dragging");
-    svg.releasePointerCapture(event.pointerId);
   }
   svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
   svg.addEventListener("pointerleave", endDrag);
 
   svg.addEventListener("click", () => {
