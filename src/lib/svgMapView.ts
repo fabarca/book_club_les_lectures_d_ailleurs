@@ -253,11 +253,25 @@ function setupPanAndZoom(
   let lastPinchDistance: number | null = null;
   let lastPinchMidpoint: { x: number; y: number } | null = null;
 
+  // With preserveAspectRatio="xMidYMid meet" the svg scales uniformly and
+  // letterboxes whichever axis doesn't match the container's aspect ratio,
+  // so both axes share a single px-per-unit scale (not rect.width/height
+  // independently) and the letterboxed axis has a centering offset to
+  // subtract before converting client coordinates into svg-space.
+  function svgUnitsPerPixel(rect: DOMRect): number {
+    return Math.max(viewBox.width / rect.width, viewBox.height / rect.height);
+  }
+
   function clientToSvgPoint(clientX: number, clientY: number): { x: number; y: number } {
     const rect = svg.getBoundingClientRect();
+    const unitsPerPixel = svgUnitsPerPixel(rect);
+    const renderedWidth = viewBox.width / unitsPerPixel;
+    const renderedHeight = viewBox.height / unitsPerPixel;
+    const offsetX = (rect.width - renderedWidth) / 2;
+    const offsetY = (rect.height - renderedHeight) / 2;
     return {
-      x: viewBox.x + ((clientX - rect.left) / rect.width) * viewBox.width,
-      y: viewBox.y + ((clientY - rect.top) / rect.height) * viewBox.height,
+      x: viewBox.x + (clientX - rect.left - offsetX) * unitsPerPixel,
+      y: viewBox.y + (clientY - rect.top - offsetY) * unitsPerPixel,
     };
   }
 
@@ -328,8 +342,9 @@ function setupPanAndZoom(
 
       if (lastPinchDistance !== null && lastPinchMidpoint !== null) {
         const rect = svg.getBoundingClientRect();
-        const dx = ((midpoint.x - lastPinchMidpoint.x) / rect.width) * viewBox.width;
-        const dy = ((midpoint.y - lastPinchMidpoint.y) / rect.height) * viewBox.height;
+        const unitsPerPixel = svgUnitsPerPixel(rect);
+        const dx = (midpoint.x - lastPinchMidpoint.x) * unitsPerPixel;
+        const dy = (midpoint.y - lastPinchMidpoint.y) * unitsPerPixel;
         viewBox = { ...viewBox, x: viewBox.x - dx, y: viewBox.y - dy };
 
         const zoomFactor = distance > 0 ? lastPinchDistance / distance : 1;
@@ -344,8 +359,9 @@ function setupPanAndZoom(
     if (!isDragging) return;
     hasDragged = true;
     const rect = svg.getBoundingClientRect();
-    const dx = ((event.clientX - lastPointer.x) / rect.width) * viewBox.width;
-    const dy = ((event.clientY - lastPointer.y) / rect.height) * viewBox.height;
+    const unitsPerPixel = svgUnitsPerPixel(rect);
+    const dx = (event.clientX - lastPointer.x) * unitsPerPixel;
+    const dy = (event.clientY - lastPointer.y) * unitsPerPixel;
     viewBox = { ...viewBox, x: viewBox.x - dx, y: viewBox.y - dy };
     lastPointer = { x: event.clientX, y: event.clientY };
     setViewBox(svg, viewBox);
