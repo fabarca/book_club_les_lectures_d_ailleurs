@@ -13,7 +13,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "node scripts/static-server.mjs",
+    command: "npx http-server . -c-1 -p 8080",
     port: PORT,
     reuseExistingServer: !process.env.CI,
   },

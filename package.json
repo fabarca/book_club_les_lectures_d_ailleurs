@@ -8,10 +8,10 @@
     "prebuild": "node generate_manifest.js",
     "build": "tsc",
     "parse": "node meetup_parser.js",
-    "serve": "node scripts/static-server.mjs",
+    "serve": "npx http-server . -c-1",
     "pretest": "npm run build",
-    "test": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
-    "test:ui": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test --ui"
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
