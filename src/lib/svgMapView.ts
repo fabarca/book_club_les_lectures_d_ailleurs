@@ -2,7 +2,7 @@ import type { Book } from "./types.js";
 import type { Point2D } from "./geoProjection.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const MAX_ZOOM_SCALE = 8;
+const MAX_ZOOM_SCALE = 10;
 
 // Markers are drawn 4x as large on narrow (mobile) viewports, where
 // fingers are far less precise than a mouse cursor. Matches the layout
