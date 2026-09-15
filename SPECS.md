@@ -1,4 +1,4 @@
-Structure du projet
+## Structure du projet
 - `src/` — sources TypeScript
   - `main.ts` → compile vers `main.js` (chargement des livres, orchestration : construit la carte SVG et branche le panneau de détail)
   - `meetup_parser.ts` → compile vers `meetup_parser.js` (script Node : récupère les événements Meetup et met à jour `books/`)
@@ -33,10 +33,22 @@ Pays: {author_country}
 
 ```
 
-Stack:
+## Stack
 Software open source.
 TypeScript, compilé en JavaScript simple (pas de framework, pas de bundler).
 Carte du monde dessinée en SVG à partir de `data/world-countries.geo.json` (pas de dépendance externe, pas de tuiles chargées depuis un CDN).
 
-Conventions:
-Le code est en anglais, le contenu des markdown et du site statique est en français.
+## Conventions
+Code and comments are written in English. Content texts directed to final users are written in French.
+
+This project follow the principles of: Don't Repeat Yourself, Keep it simple and Separation of Concerns.
+
+In order to improve readability when returning an output in a function, prefer to store the output in a variable first with a clear name instead of a direct return of the expression that produce the output. Prefer returning a single variable(e.g. "return variable_name"), instead of a list (e.g. "return [a, b, ...]") or a dict (e.g. "return {a, b}").
+
+Don't use anonymous functions.
+Use explicit loops (like: for, for..of, for..in).
+Reduce complexity by avoiding embedded logics and thus reducing the levels of indentation. For example, when finding more than three levels of identation inside a function, it must be refactored by extracting some logic outside (for example in a separated function). Don't define functions inside functions.
+
+Whenever is possible, prefer functional programming approach, for example creating functions that return an output without modifying the state of the input. 
+
+Use clear naming of functions, classes, methods, variables, etc.
