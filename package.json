@@ -8,11 +8,15 @@
     "prebuild": "node generate_manifest.js",
     "build": "tsc",
     "parse": "node meetup_parser.js",
-    "serve": "npx http-server . -c-1"
+    "serve": "node scripts/static-server.mjs",
+    "pretest": "npm run build",
+    "test": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
+    "test:ui": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test --ui"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
+    "@playwright/test": "^1.63.0",
+    "@types/geojson": "^7946.0.16",
     "@types/node": "^22.0.0",
-    "@types/geojson": "^7946.0.16"
+    "typescript": "^5.6.0"
   }
 }
