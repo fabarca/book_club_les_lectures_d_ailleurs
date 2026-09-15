@@ -181,5 +181,6 @@ export const KNOWN_UNMAPPABLE = new Set([
 
 export function lookupCountryGeoName(frenchName: string): string | undefined {
   const trimmed = frenchName.trim();
-  return FRENCH_TO_GEOJSON_NAME[trimmed];
+  const geoName = FRENCH_TO_GEOJSON_NAME[trimmed];
+  return geoName;
 }

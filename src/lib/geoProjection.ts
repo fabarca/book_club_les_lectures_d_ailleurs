@@ -13,8 +13,9 @@ const MAP_HEIGHT = 180;
 export const MAP_VIEWBOX = `0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`;
 
 export function project(lat: number, lng: number): Point2D {
-  return {
+  const point: Point2D = {
     x: lng + MAP_WIDTH / 2,
     y: MAP_HEIGHT / 2 - lat,
   };
+  return point;
 }

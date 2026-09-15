@@ -5,18 +5,17 @@ export interface CountryCentroid {
   lng: number;
 }
 
+function collectPointsInto(coords: any, points: [number, number][]): void {
+  if (typeof coords[0] === "number") {
+    points.push(coords as [number, number]);
+    return;
+  }
+  for (const c of coords) collectPointsInto(c, points);
+}
+
 function collectPoints(geometry: GeoJSON.Geometry): [number, number][] {
   const points: [number, number][] = [];
-
-  function visit(coords: any): void {
-    if (typeof coords[0] === "number") {
-      points.push(coords as [number, number]);
-    } else {
-      for (const c of coords) visit(c);
-    }
-  }
-
-  visit((geometry as any).coordinates);
+  collectPointsInto((geometry as any).coordinates, points);
   return points;
 }
 
@@ -52,7 +51,8 @@ export function computeCentroid(geometry: GeoJSON.Geometry): CountryCentroid {
   let centerLng = (minLng + maxLng) / 2;
   if (centerLng > 180) centerLng -= 360;
 
-  return { lat: (minLat + maxLat) / 2, lng: centerLng };
+  const centroid: CountryCentroid = { lat: (minLat + maxLat) / 2, lng: centerLng };
+  return centroid;
 }
 
 export function buildCountryCentroids(geojson: GeoJSON.FeatureCollection): Map<string, CountryCentroid> {
@@ -67,11 +67,34 @@ export function buildCountryCentroids(geojson: GeoJSON.FeatureCollection): Map<s
 }
 
 function ringToPath(ring: [number, number][], project: (lat: number, lng: number) => Point2D): string {
-  const commands = ring.map(([lng, lat], i) => {
+  const commands: string[] = [];
+  for (let i = 0; i < ring.length; i++) {
+    const [lng, lat] = ring[i];
     const { x, y } = project(lat, lng);
-    return `${i === 0 ? "M" : "L"}${x},${y}`;
-  });
-  return `${commands.join(" ")} Z`;
+    commands.push(`${i === 0 ? "M" : "L"}${x},${y}`);
+  }
+  const path = `${commands.join(" ")} Z`;
+  return path;
+}
+
+function buildPathFromRings(
+  rings: [number, number][][],
+  project: (lat: number, lng: number) => Point2D,
+): string {
+  const ringPaths: string[] = [];
+  for (const ring of rings) ringPaths.push(ringToPath(ring, project));
+  const path = ringPaths.join(" ");
+  return path;
+}
+
+function buildPathFromPolygons(
+  polygons: [number, number][][][],
+  project: (lat: number, lng: number) => Point2D,
+): string {
+  const polygonPaths: string[] = [];
+  for (const polygon of polygons) polygonPaths.push(buildPathFromRings(polygon, project));
+  const path = polygonPaths.join(" ");
+  return path;
 }
 
 /** Converts a country's GeoJSON geometry into an SVG path "d" string via the
@@ -82,14 +105,13 @@ export function geometryToSvgPath(
   project: (lat: number, lng: number) => Point2D,
 ): string {
   if (geometry.type === "Polygon") {
-    return (geometry.coordinates as [number, number][][])
-      .map((ring) => ringToPath(ring, project))
-      .join(" ");
+    const path = buildPathFromRings(geometry.coordinates as [number, number][][], project);
+    return path;
   }
   if (geometry.type === "MultiPolygon") {
-    return (geometry.coordinates as [number, number][][][])
-      .map((polygon) => polygon.map((ring) => ringToPath(ring, project)).join(" "))
-      .join(" ");
+    const path = buildPathFromPolygons(geometry.coordinates as [number, number][][][], project);
+    return path;
   }
-  return "";
+  const emptyPath = "";
+  return emptyPath;
 }

@@ -2,11 +2,15 @@ import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { parseBookMarkdown } from "./lib/bookParser.js";
-import { extractMeetupEventId, generateManifest } from "./generate_manifest.js";
+import { extractMeetupEventId, generateManifest, isMarkdownFile } from "./generate_manifest.js";
 const GROUP_URLNAME = "club-de-lecture-les-lectures-d-ailleurs";
 const GRAPHQL_ENDPOINT = "https://www.meetup.com/gql2";
 const BOOKS_DIR = path.join(process.cwd(), "books");
 const PLACEHOLDER = "À COMPLÉTER";
+function compareEventsByDateAscending(a, b) {
+    const difference = new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime();
+    return difference;
+}
 const QUERY = `query getGroupEvents($urlname:String!,$first:Int,$after:String){
   groupByUrlname(urlname:$urlname){
     id
@@ -48,7 +52,7 @@ async function fetchAllEvents() {
         after = eventsConnection.pageInfo.endCursor;
     }
     // Oldest first, so array position gives a stable edition number.
-    events.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+    events.sort(compareEventsByDateAscending);
     return events;
 }
 /**
@@ -73,7 +77,8 @@ function splitTitleIntoBookAndAuthor(rawTitle) {
     const match = /^(.*)\s+d(?:e\s+|')(.*)$/.exec(withoutEditionPrefix);
     if (!match)
         return null;
-    return { book: match[1].trim(), author: match[2].trim() };
+    const split = { book: match[1].trim(), author: match[2].trim() };
+    return split;
 }
 function slugify(value) {
     return value
@@ -88,7 +93,9 @@ async function loadKnownEventIds() {
     if (!existsSync(BOOKS_DIR))
         return knownEventIds;
     const files = await readdir(BOOKS_DIR);
-    for (const file of files.filter((f) => f.endsWith(".md"))) {
+    for (const file of files) {
+        if (!isMarkdownFile(file))
+            continue;
         const text = await readFile(path.join(BOOKS_DIR, file), "utf8");
         const book = parseBookMarkdown(text, file);
         const eventId = extractMeetupEventId(book.sourceUrl);
@@ -107,14 +114,16 @@ async function downloadImage(url, destPath) {
     await writeFile(destPath, buffer);
 }
 function eventUrl(eventId) {
-    return `https://www.meetup.com/${GROUP_URLNAME}/events/${eventId}/`;
+    const url = `https://www.meetup.com/${GROUP_URLNAME}/events/${eventId}/`;
+    return url;
 }
 function toDateOnly(isoDateTime) {
-    return isoDateTime.slice(0, 10);
+    const dateOnly = isoDateTime.slice(0, 10);
+    return dateOnly;
 }
 function buildMarkdown(params) {
     const { book, author, imageFileName, edition, eventDate, sourceUrl, description } = params;
-    return `# Livre: ${book}
+    const markdown = `# Livre: ${book}
 ![Couverture](${imageFileName})
 Édition: ${edition}
 Date l'événement: ${toDateOnly(eventDate)}
@@ -126,6 +135,7 @@ Pays: ${PLACEHOLDER}
 ## Description
 ${description}
 `;
+    return markdown;
 }
 async function main() {
     await mkdir(BOOKS_DIR, { recursive: true });
@@ -179,7 +189,8 @@ async function main() {
     const manifest = await generateManifest();
     console.log(`Done. ${created} new book(s) added, ${manifest.length} total in manifest.json.`);
 }
-main().catch((error) => {
+function handleMeetupParserError(error) {
     console.error("meetup_parser failed:", error);
     process.exitCode = 1;
-});
+}
+main().catch(handleMeetupParserError);

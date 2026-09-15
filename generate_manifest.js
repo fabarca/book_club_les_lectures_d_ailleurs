@@ -6,11 +6,25 @@ const BOOKS_DIR = path.join(process.cwd(), "books");
 const MANIFEST_PATH = path.join(process.cwd(), "manifest.json");
 export function extractMeetupEventId(sourceUrl) {
     const match = /\/events\/(\d+)\/?/.exec(sourceUrl);
-    return match ? match[1] : "";
+    const eventId = match ? match[1] : "";
+    return eventId;
+}
+export function isMarkdownFile(file) {
+    const isMarkdown = file.endsWith(".md");
+    return isMarkdown;
+}
+function compareByEditionNumberDescending(a, b) {
+    const difference = b.editionNumber - a.editionNumber;
+    return difference;
 }
 export async function generateManifest() {
     const files = await readdir(BOOKS_DIR);
-    const mdFiles = files.filter((file) => file.endsWith(".md")).sort();
+    const mdFiles = [];
+    for (const file of files) {
+        if (isMarkdownFile(file))
+            mdFiles.push(file);
+    }
+    mdFiles.sort();
     const entries = [];
     for (const file of mdFiles) {
         const text = await readFile(path.join(BOOKS_DIR, file), "utf8");
@@ -26,7 +40,7 @@ export async function generateManifest() {
             editionNumber,
         });
     }
-    entries.sort((a, b) => b.editionNumber - a.editionNumber);
+    entries.sort(compareByEditionNumberDescending);
     await writeFile(MANIFEST_PATH, JSON.stringify(entries, null, 2) + "\n", "utf8");
     return entries;
 }
@@ -34,9 +48,10 @@ async function main() {
     const entries = await generateManifest();
     console.log(`Wrote manifest.json with ${entries.length} entrie(s).`);
 }
+function handleGenerateManifestError(error) {
+    console.error("generate_manifest failed:", error);
+    process.exitCode = 1;
+}
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    main().catch((error) => {
-        console.error("generate_manifest failed:", error);
-        process.exitCode = 1;
-    });
+    main().catch(handleGenerateManifestError);
 }

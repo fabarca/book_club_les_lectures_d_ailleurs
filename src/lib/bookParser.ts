@@ -50,7 +50,7 @@ export function parseBookMarkdown(text: string, sourceFile: string): Book {
     throw new Error(`${sourceFile}: missing "Auteur:" field`);
   }
 
-  return {
+  const book: Book = {
     title,
     author,
     edition: fields["Édition"] ?? "",
@@ -62,4 +62,5 @@ export function parseBookMarkdown(text: string, sourceFile: string): Book {
     sourceFile,
     sourceUrl: fields["Lien"] ?? "",
   };
+  return book;
 }
