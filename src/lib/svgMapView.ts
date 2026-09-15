@@ -3,6 +3,18 @@ import type { Book } from "./types.js";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MAX_ZOOM_SCALE = 8;
 
+// Markers are drawn 4x as large on narrow (mobile) viewports, where
+// fingers are far less precise than a mouse cursor. Matches the layout
+// breakpoint used for the mobile book panel in styles.css.
+const MOBILE_MARKER_SCALE = 4;
+const MOBILE_BREAKPOINT_QUERY = "(max-width: 600px)";
+
+// On mobile, markers only appear once the user has zoomed in at least this
+// much — at the fully zoomed-out view there isn't enough room between
+// countries to place them accurately by touch, so they'd just add clutter.
+// Zooming back out below this level hides them again.
+const MOBILE_MARKER_MIN_ZOOM = 2;
+
 // Box-pin geometry, in local units centered on the anchor tip at (0, 0).
 const PIN_SCALE = 0.6 * 0.85;
 const PIN_BOX_HALF_WIDTH = 7 * PIN_SCALE;
@@ -86,15 +98,56 @@ export function createSvgMap(container: HTMLElement, viewBox: string): SvgMapVie
   // setupPanAndZoom's zoomRatio).
   const markerScaleGroups: SVGGElement[] = [tooltipScaleGroup];
 
+  // Pin groups get an extra scale (on top of the zoom-cancelling one above)
+  // on mobile viewports, applied independently so the tooltip's size is
+  // unaffected. Kept in sync with the media query rather than read once, so
+  // rotating a phone or resizing a browser window updates it live.
+  const pinMobileGroups: SVGGElement[] = [];
+  const mobileQuery = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
+
+  function currentMobileScale(): number {
+    return mobileQuery.matches ? MOBILE_MARKER_SCALE : 1;
+  }
+
+  function applyMobileScale(): void {
+    for (const group of pinMobileGroups) {
+      group.setAttribute("transform", `scale(${currentMobileScale()})`);
+    }
+  }
+
+  // The outer <g class="marker"> elements, hidden on mobile until the user
+  // has zoomed in past MOBILE_MARKER_MIN_ZOOM (see updateMarkerVisibility).
+  const markerGroups: SVGGElement[] = [];
+
+  function updateMarkerVisibility(): void {
+    const visible = !mobileQuery.matches || currentZoomRatio <= 1 / MOBILE_MARKER_MIN_ZOOM;
+    for (const group of markerGroups) {
+      group.classList.toggle("marker-hidden", !visible);
+    }
+    if (!visible) hideTooltip();
+  }
+
+  mobileQuery.addEventListener("change", () => {
+    applyMobileScale();
+    updateMarkerVisibility();
+  });
+
   let backgroundClickCallback: (() => void) | null = null;
+
+  // Tracks the zoom-cancelling scale currently applied to markerScaleGroups,
+  // so a marker rendered after the map has already been zoomed starts out at
+  // the right size instead of waiting for the next zoom change to pick it up.
+  let currentZoomRatio = 1;
 
   setupPanAndZoom(
     svg,
     parseViewBox(viewBox),
     (zoomRatio) => {
+      currentZoomRatio = zoomRatio;
       for (const group of markerScaleGroups) {
         group.setAttribute("transform", `scale(${zoomRatio})`);
       }
+      updateMarkerVisibility();
     },
     () => backgroundClickCallback?.(),
   );
@@ -119,10 +172,16 @@ export function createSvgMap(container: HTMLElement, viewBox: string): SvgMapVie
         group.setAttribute("transform", `translate(${marker.x},${marker.y})`);
 
         const scaleGroup = document.createElementNS(SVG_NS, "g");
-        scaleGroup.appendChild(createPinShape());
-        scaleGroup.appendChild(createPinLabel(marker.books.length));
+        scaleGroup.setAttribute("transform", `scale(${currentZoomRatio})`);
+        const pinGroup = document.createElementNS(SVG_NS, "g");
+        pinGroup.setAttribute("transform", `scale(${currentMobileScale()})`);
+        pinGroup.appendChild(createPinShape());
+        pinGroup.appendChild(createPinLabel(marker.books.length));
+        scaleGroup.appendChild(pinGroup);
         group.appendChild(scaleGroup);
         markerScaleGroups.push(scaleGroup);
+        pinMobileGroups.push(pinGroup);
+        markerGroups.push(group);
 
         const countryPath = countryPathsByName.get(marker.geoName);
         const countryLabel = marker.books[0]?.country ?? marker.geoName;
@@ -148,6 +207,7 @@ export function createSvgMap(container: HTMLElement, viewBox: string): SvgMapVie
         });
         markersGroup.appendChild(group);
       }
+      updateMarkerVisibility();
     },
     onBackgroundClick(callback) {
       backgroundClickCallback = callback;
