@@ -11,6 +11,33 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".marker")).not.toHaveCount(0);
   });
 
+  test("every marker sits inside its own country's rendered shape", async ({ page }) => {
+    await page.goto("/");
+    // Markers stay in the DOM but hidden (display:none) on mobile until
+    // zoomed in — this test only checks their geometry, not visibility.
+    await page.locator(".marker").first().waitFor({ state: "attached" });
+    const offenders = await page.evaluate(() => {
+      const svg = document.querySelector("svg#map") as SVGSVGElement;
+      const bad: string[] = [];
+      for (const marker of Array.from(document.querySelectorAll(".marker"))) {
+        const geoName = marker.getAttribute("data-geo-name");
+        const transform = marker.getAttribute("transform") ?? "";
+        const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+        if (!geoName || !match) continue;
+
+        const countryPath = document.querySelector(`.country[data-geo-name="${geoName}"]`) as SVGPathElement | null;
+        if (!countryPath) continue;
+
+        const point = svg.createSVGPoint();
+        point.x = parseFloat(match[1]);
+        point.y = parseFloat(match[2]);
+        if (!countryPath.isPointInFill(point)) bad.push(geoName);
+      }
+      return bad;
+    });
+    expect(offenders).toEqual([]);
+  });
+
   test("hovering a marker highlights its country and shows a tooltip", async ({ page, isMobile }) => {
     test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
     await page.goto("/");

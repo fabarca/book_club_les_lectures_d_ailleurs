@@ -314,6 +314,7 @@ function renderMarker(state: SvgMapState, marker: MarkerInput, onMarkerClick: (g
   const group = document.createElementNS(SVG_NS, "g") as SVGGElement;
   group.setAttribute("class", "marker");
   group.setAttribute("transform", `translate(${marker.x},${marker.y})`);
+  group.setAttribute("data-geo-name", marker.geoName);
 
   const scaleGroup = document.createElementNS(SVG_NS, "g") as SVGGElement;
   scaleGroup.setAttribute("transform", `scale(${state.currentZoomRatio})`);
