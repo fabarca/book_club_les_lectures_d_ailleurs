@@ -12,8 +12,8 @@ html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
 #map svg.dragging { cursor: grabbing; }
 
 .country { fill: #d7dee3; stroke: #ffffff; stroke-width: 0.3; fill-rule: evenodd; }
-.country.has-books { fill: #8fb8d6; }
-.country.country-hovered { fill: #f2a154; }
+.country.has-books { fill: #8fb8d6; cursor: pointer; }
+.country.country-hovered, .country.country-selected { fill: #f2a154; }
 
 .marker { cursor: pointer; }
 .marker.marker-hidden { display: none; }

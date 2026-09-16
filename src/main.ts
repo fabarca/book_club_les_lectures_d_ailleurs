@@ -8,6 +8,8 @@ import {
   renderCountries,
   renderMarkers,
   registerBackgroundClickHandler,
+  registerCountryClickHandler,
+  setSelectedCountry,
   type SvgMapState,
   type CountryFeatureInput,
   type MarkerInput,
@@ -138,8 +140,13 @@ function showBookList(state: AppState): void {
   );
 }
 
-function handleFilterChange(state: AppState, geoName: string | null): void {
+function setCurrentFilterGeoName(state: AppState, geoName: string | null): void {
   state.currentFilterGeoName = geoName;
+  setSelectedCountry(state.mapState, geoName);
+}
+
+function handleFilterChange(state: AppState, geoName: string | null): void {
+  setCurrentFilterGeoName(state, geoName);
   showBookList(state);
 }
 
@@ -163,13 +170,13 @@ function togglePanel(state: AppState): void {
 }
 
 function handleMarkerSelected(state: AppState, geoName: string): void {
-  state.currentFilterGeoName = geoName;
+  setCurrentFilterGeoName(state, geoName);
   showBookList(state);
   openPanel(state);
 }
 
 function handleMapBackgroundClicked(state: AppState): void {
-  state.currentFilterGeoName = null;
+  setCurrentFilterGeoName(state, null);
   showBookList(state);
 }
 
@@ -208,6 +215,7 @@ async function main(): Promise<void> {
 
   bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
   renderMarkers(mapState, markers, handleMarkerSelected.bind(null, state));
+  registerCountryClickHandler(mapState, handleMarkerSelected.bind(null, state));
   registerBackgroundClickHandler(mapState, handleMapBackgroundClicked.bind(null, state));
 
   showBookList(state);

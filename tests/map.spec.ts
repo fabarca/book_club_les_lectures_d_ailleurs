@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures";
-import { getSafeMapPoint, isMobileProject } from "./helpers";
+import { getCountryLandmassPoint, getNoBooksCountryPoint, getSafeMapPoint, isMobileProject } from "./helpers";
 
 test.describe("map and book panel", () => {
   test("loads with map, countries and markers in the DOM", async ({ page }) => {
@@ -19,6 +19,18 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".marker-tooltip")).toBeVisible();
   });
 
+  test("hovering a country's landmass (not its marker) highlights it and shows the tooltip", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobileProject({ isMobile }), "The book panel covers part of the map on mobile, making landmass targeting unreliable");
+    await page.goto("/");
+    const point = await getCountryLandmassPoint(page);
+    await page.mouse.move(point.x, point.y);
+    await expect(page.locator(".country-hovered")).toHaveCount(1);
+    await expect(page.locator(".marker-tooltip")).toBeVisible();
+  });
+
   test("clicking a marker opens the book panel filtered to that country", async ({ page, isMobile }) => {
     test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
     await page.goto("/");
@@ -27,12 +39,42 @@ test.describe("map and book panel", () => {
     await expect(page.locator("#book-panel-toggle")).toHaveClass(/open/);
     await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
     await expect(page.locator("#book-list li").first()).toBeVisible();
+    await expect(page.locator(".country-selected")).toHaveCount(1);
+  });
+
+  test("clicking a country's landmass opens the book panel filtered to that country, like clicking its marker", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobileProject({ isMobile }), "The book panel covers part of the map on mobile, making landmass targeting unreliable");
+    await page.goto("/");
+    const point = await getCountryLandmassPoint(page);
+    await page.mouse.click(point.x, point.y);
+    await expect(page.locator("#book-panel")).toHaveClass(/open/);
+    await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
+    await expect(page.locator(".country-selected")).toHaveCount(1);
+  });
+
+  test("clicking a country without books resets the filter, like clicking empty background", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobileProject({ isMobile }), "The book panel covers part of the map on mobile, making landmass targeting unreliable");
+    await page.goto("/");
+    await page.locator(".marker").first().click();
+    await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
+
+    const point = await getNoBooksCountryPoint(page);
+    await page.mouse.click(point.x, point.y);
+    await expect(page.locator("#country-filter-toggle")).toHaveText(/Tous les pays/);
+    await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
   test("country filter dropdown opens and resetting to all countries updates the list", async ({ page, isMobile }) => {
     test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
     await page.goto("/");
     await page.locator(".marker").first().click();
+    await expect(page.locator(".country-selected")).toHaveCount(1);
 
     const filterToggle = page.locator("#country-filter-toggle");
     await filterToggle.click();
@@ -41,6 +83,7 @@ test.describe("map and book panel", () => {
 
     await optionsList.locator("li").first().click(); // "Tous les pays" is always the first option
     await expect(filterToggle).toHaveText(/Tous les pays/);
+    await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
   test("clicking a book opens the detail panel, and back returns to the list", async ({ page }) => {
@@ -57,10 +100,12 @@ test.describe("map and book panel", () => {
     await page.goto("/");
     await page.locator(".marker").first().click();
     await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
+    await expect(page.locator(".country-selected")).toHaveCount(1);
 
     const safePoint = await getSafeMapPoint(page);
     await page.mouse.click(safePoint.x, safePoint.y);
     await expect(page.locator("#country-filter-toggle")).toHaveText(/Tous les pays/);
+    await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
   test("the panel toggle button opens and closes the book panel", async ({ page }) => {

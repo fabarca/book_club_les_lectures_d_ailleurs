@@ -65,12 +65,17 @@ export interface SvgMapState {
   countriesGroup: SVGGElement;
   markersGroup: SVGGElement;
   countryPathsByName: Map<string, SVGPathElement>;
+  /** Where each country's marker sits, so hovering the country's shape (away
+   * from the pin itself) can show the same tooltip anchored at the same spot. */
+  markerPositionByGeoName: Map<string, { x: number; y: number; label: string }>;
   tooltip: TooltipState;
   markerScaleGroups: SVGGElement[];
   mobileScaleGroups: SVGGElement[];
   markerGroups: SVGGElement[];
   mobileQuery: MediaQueryList;
   backgroundClickCallback: (() => void) | null;
+  countryClickCallback: ((geoName: string) => void) | null;
+  selectedCountryPath: SVGPathElement | null;
   currentZoomRatio: number;
 }
 
@@ -108,6 +113,7 @@ interface PanZoomState {
   lastPinchMidpoint: Point2D | null;
   onZoomChange: (zoomRatio: number) => void;
   onBackgroundClick: () => void;
+  onCountryClick: (geoName: string) => void;
 }
 
 interface PinchGeometry {
@@ -169,6 +175,10 @@ function handleMapBackgroundClick(state: SvgMapState): void {
   if (callback) callback();
 }
 
+function handleMapCountryClick(state: SvgMapState, geoName: string): void {
+  state.countryClickCallback?.(geoName);
+}
+
 /** Creates the <svg id="map"> element and its state: country shapes and one
  * box-pin marker per country, plus wheel-zoom / drag-to-pan wiring that
  * mutates the viewBox. Pure DOM/SVG concerns only — it never fetches data or
@@ -187,6 +197,7 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
   svg.appendChild(markersGroup);
 
   const countryPathsByName = new Map<string, SVGPathElement>();
+  const markerPositionByGeoName = new Map<string, { x: number; y: number; label: string }>();
   const tooltip = createTooltipState(svg);
 
   // Each marker's (and the tooltip's) visual content lives in its own
@@ -209,12 +220,15 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
     countriesGroup,
     markersGroup,
     countryPathsByName,
+    markerPositionByGeoName,
     tooltip,
     markerScaleGroups,
     mobileScaleGroups,
     markerGroups,
     mobileQuery,
     backgroundClickCallback: null,
+    countryClickCallback: null,
+    selectedCountryPath: null,
     currentZoomRatio: 1,
   };
 
@@ -230,16 +244,38 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
     parseViewBox(viewBox),
     handleMapZoomChange.bind(null, state),
     handleMapBackgroundClick.bind(null, state),
+    handleMapCountryClick.bind(null, state),
   );
 
   return state;
 }
 
+function handleCountryPointerEnter(state: SvgMapState, path: SVGPathElement, geoName: string): void {
+  path.classList.add("country-hovered");
+  const position = state.markerPositionByGeoName.get(geoName);
+  if (position) showTooltip(state.tooltip, position.x, position.y, position.label);
+}
+
+function handleCountryPointerLeave(state: SvgMapState, path: SVGPathElement): void {
+  path.classList.remove("country-hovered");
+  hideTooltip(state.tooltip);
+}
+
 function renderCountry(state: SvgMapState, country: CountryFeatureInput, countriesWithBooks: Set<string>): void {
   const path = document.createElementNS(SVG_NS, "path") as SVGPathElement;
   path.setAttribute("d", country.path);
-  const className = countriesWithBooks.has(country.name) ? "country has-books" : "country";
-  path.setAttribute("class", className);
+  const hasBooks = countriesWithBooks.has(country.name);
+  path.setAttribute("class", hasBooks ? "country has-books" : "country");
+  path.setAttribute("data-geo-name", country.name);
+  if (hasBooks) {
+    // Markers sit in a separate DOM group on top of the country shapes, so
+    // hovering the pin itself doesn't naturally propagate to the country
+    // path underneath (that's handled manually in handleMarkerPointerEnter/
+    // Leave) — these listeners cover the rest of the country's area, showing
+    // the same tooltip anchored at the marker's position.
+    path.addEventListener("pointerenter", handleCountryPointerEnter.bind(null, state, path, country.name));
+    path.addEventListener("pointerleave", handleCountryPointerLeave.bind(null, state, path));
+  }
   state.countriesGroup.appendChild(path);
   state.countryPathsByName.set(country.name, path);
 }
@@ -293,6 +329,7 @@ function renderMarker(state: SvgMapState, marker: MarkerInput, onMarkerClick: (g
 
   const countryPath = state.countryPathsByName.get(marker.geoName);
   const countryLabel = marker.books[0]?.country ?? marker.geoName;
+  state.markerPositionByGeoName.set(marker.geoName, { x: marker.x, y: marker.y, label: countryLabel });
   const context: MarkerRenderContext = { state, group, countryPath, marker, countryLabel, onMarkerClick };
 
   group.addEventListener("click", handleMarkerClick.bind(null, context));
@@ -314,6 +351,22 @@ export function renderMarkers(
  * isn't a marker (a country without books, or open background/ocean). */
 export function registerBackgroundClickHandler(state: SvgMapState, callback: () => void): void {
   state.backgroundClickCallback = callback;
+}
+
+/** Registers a callback fired when the user clicks directly on a country's
+ * shape that has books (anywhere in its landmass, not just its marker pin). */
+export function registerCountryClickHandler(state: SvgMapState, callback: (geoName: string) => void): void {
+  state.countryClickCallback = callback;
+}
+
+/** Applies the persistent "selected" highlight to a country by geoName,
+ * clearing it from whichever country previously had it. Pass null to clear
+ * the highlight entirely. */
+export function setSelectedCountry(state: SvgMapState, geoName: string | null): void {
+  state.selectedCountryPath?.classList.remove("country-selected");
+  const path = geoName ? state.countryPathsByName.get(geoName) : undefined;
+  path?.classList.add("country-selected");
+  state.selectedCountryPath = path ?? null;
 }
 
 function createTooltipState(svg: SVGSVGElement): TooltipState {
@@ -557,12 +610,21 @@ function endDrag(state: PanZoomState, event: PointerEvent): void {
   state.svg.classList.remove("dragging");
 }
 
-function handleBackgroundClickOnSvg(state: PanZoomState): void {
-  // Marker clicks call stopPropagation, so only clicks on empty background
-  // or a country without a marker reach here. A pan-drag gesture also ends
-  // in a "click" on svg (setPointerCapture retargets it there), which
-  // hasDragged filters out.
+function handleBackgroundClickOnSvg(state: PanZoomState, event: MouseEvent): void {
+  // Marker clicks call stopPropagation, so only clicks on empty background,
+  // a country without books, or a country with books (off its marker pin)
+  // reach here. A pan-drag gesture also ends in a "click" on svg
+  // (setPointerCapture retargets it there), which hasDragged filters out.
   if (state.hasDragged) return;
+  // setPointerCapture retargets the click's `target` to the svg itself, so
+  // event.target can't tell us what was actually clicked. elementFromPoint
+  // uses viewport coordinates instead, which capture doesn't affect.
+  const countryPath = document.elementFromPoint(event.clientX, event.clientY)?.closest(".country.has-books");
+  const geoName = countryPath?.getAttribute("data-geo-name");
+  if (geoName) {
+    state.onCountryClick(geoName);
+    return;
+  }
   state.onBackgroundClick();
 }
 
@@ -571,6 +633,7 @@ function createPanZoomState(
   initialViewBox: ViewBox,
   onZoomChange: (zoomRatio: number) => void,
   onBackgroundClick: () => void,
+  onCountryClick: (geoName: string) => void,
 ): PanZoomState {
   const state: PanZoomState = {
     svg,
@@ -586,6 +649,7 @@ function createPanZoomState(
     lastPinchMidpoint: null,
     onZoomChange,
     onBackgroundClick,
+    onCountryClick,
   };
   return state;
 }
@@ -595,8 +659,9 @@ function setupPanAndZoom(
   initialViewBox: ViewBox,
   onZoomChange: (zoomRatio: number) => void,
   onBackgroundClick: () => void,
+  onCountryClick: (geoName: string) => void,
 ): void {
-  const state = createPanZoomState(svg, initialViewBox, onZoomChange, onBackgroundClick);
+  const state = createPanZoomState(svg, initialViewBox, onZoomChange, onBackgroundClick, onCountryClick);
 
   svg.addEventListener("wheel", handleWheel.bind(null, state), { passive: false });
   svg.addEventListener("pointerdown", handlePointerDown.bind(null, state));
