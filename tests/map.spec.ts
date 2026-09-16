@@ -113,13 +113,40 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
-  test("clicking a book opens the detail panel, and back returns to the list", async ({ page }) => {
+  test("hovering a book highlights its country and shows the tooltip, like hovering the country directly", async ({
+    page,
+  }) => {
     await page.goto("/");
+    const firstItem = page.locator("#book-list li").first();
+    await firstItem.hover();
+    await expect(page.locator(".country-hovered")).toHaveCount(1);
+    await expect(page.locator(".marker-tooltip")).toBeVisible();
+
+    // Moving off the list entirely clears the hover highlight and tooltip.
+    await page.mouse.move(0, 0);
+    await expect(page.locator(".country-hovered")).toHaveCount(0);
+    await expect(page.locator(".marker-tooltip")).not.toBeVisible();
+  });
+
+  test("clicking a book opens the detail panel, highlights its country, and back returns to the same list", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const filterToggle = page.locator("#country-filter-toggle");
+    await expect(filterToggle).toHaveText(/Tous les pays/);
+
     await page.locator("#book-list li").first().click();
     const backButton = page.locator("#book-detail-back");
     await expect(backButton).toBeVisible();
+    await expect(page.locator(".country-selected")).toHaveCount(1);
+
     await backButton.click();
     await expect(page.locator("#book-list")).toBeVisible();
+    // Viewing the book's detail only highlighted its country — it must not
+    // have changed the active filter, so "back" shows the same unfiltered list.
+    await expect(filterToggle).toHaveText(/Tous les pays/);
+    // ...and the highlight must revert too, since no country was actually selected.
+    await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
   test("clicking the map background clears the country filter", async ({ page, isMobile }) => {

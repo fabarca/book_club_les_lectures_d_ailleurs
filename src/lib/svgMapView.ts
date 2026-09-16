@@ -76,15 +76,14 @@ export interface SvgMapState {
   backgroundClickCallback: (() => void) | null;
   countryClickCallback: ((geoName: string) => void) | null;
   selectedCountryPath: SVGPathElement | null;
+  hoveredCountryPath: SVGPathElement | null;
   currentZoomRatio: number;
 }
 
 interface MarkerRenderContext {
   state: SvgMapState;
   group: SVGGElement;
-  countryPath: SVGPathElement | undefined;
   marker: MarkerInput;
-  countryLabel: string;
   onMarkerClick: (geoName: string) => void;
 }
 
@@ -229,6 +228,7 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
     backgroundClickCallback: null,
     countryClickCallback: null,
     selectedCountryPath: null,
+    hoveredCountryPath: null,
     currentZoomRatio: 1,
   };
 
@@ -250,15 +250,12 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
   return state;
 }
 
-function handleCountryPointerEnter(state: SvgMapState, path: SVGPathElement, geoName: string): void {
-  path.classList.add("country-hovered");
-  const position = state.markerPositionByGeoName.get(geoName);
-  if (position) showTooltip(state.tooltip, position.x, position.y, position.label);
+function handleCountryPointerEnter(state: SvgMapState, geoName: string): void {
+  setHoveredCountry(state, geoName);
 }
 
-function handleCountryPointerLeave(state: SvgMapState, path: SVGPathElement): void {
-  path.classList.remove("country-hovered");
-  hideTooltip(state.tooltip);
+function handleCountryPointerLeave(state: SvgMapState): void {
+  setHoveredCountry(state, null);
 }
 
 function renderCountry(state: SvgMapState, country: CountryFeatureInput, countriesWithBooks: Set<string>): void {
@@ -273,8 +270,8 @@ function renderCountry(state: SvgMapState, country: CountryFeatureInput, countri
     // path underneath (that's handled manually in handleMarkerPointerEnter/
     // Leave) — these listeners cover the rest of the country's area, showing
     // the same tooltip anchored at the marker's position.
-    path.addEventListener("pointerenter", handleCountryPointerEnter.bind(null, state, path, country.name));
-    path.addEventListener("pointerleave", handleCountryPointerLeave.bind(null, state, path));
+    path.addEventListener("pointerenter", handleCountryPointerEnter.bind(null, state, country.name));
+    path.addEventListener("pointerleave", handleCountryPointerLeave.bind(null, state));
   }
   state.countriesGroup.appendChild(path);
   state.countryPathsByName.set(country.name, path);
@@ -301,13 +298,11 @@ function handleMarkerPointerEnter(context: MarkerRenderContext): void {
   // move once it's already last — otherwise that re-fire retriggers this
   // handler forever and starves clicks.
   if (context.group.nextElementSibling !== null) context.state.markersGroup.appendChild(context.group);
-  context.countryPath?.classList.add("country-hovered");
-  showTooltip(context.state.tooltip, context.marker.x, context.marker.y, context.countryLabel);
+  setHoveredCountry(context.state, context.marker.geoName);
 }
 
 function handleMarkerPointerLeave(context: MarkerRenderContext): void {
-  context.countryPath?.classList.remove("country-hovered");
-  hideTooltip(context.state.tooltip);
+  setHoveredCountry(context.state, null);
 }
 
 function renderMarker(state: SvgMapState, marker: MarkerInput, onMarkerClick: (geoName: string) => void): void {
@@ -328,10 +323,9 @@ function renderMarker(state: SvgMapState, marker: MarkerInput, onMarkerClick: (g
   state.mobileScaleGroups.push(pinGroup);
   state.markerGroups.push(group);
 
-  const countryPath = state.countryPathsByName.get(marker.geoName);
   const countryLabel = marker.books[0]?.country ?? marker.geoName;
   state.markerPositionByGeoName.set(marker.geoName, { x: marker.x, y: marker.y, label: countryLabel });
-  const context: MarkerRenderContext = { state, group, countryPath, marker, countryLabel, onMarkerClick };
+  const context: MarkerRenderContext = { state, group, marker, onMarkerClick };
 
   group.addEventListener("click", handleMarkerClick.bind(null, context));
   group.addEventListener("pointerenter", handleMarkerPointerEnter.bind(null, context));
@@ -375,6 +369,21 @@ export function setSelectedCountry(state: SvgMapState, geoName: string | null): 
   const path = geoName ? state.countryPathsByName.get(geoName) : undefined;
   path?.classList.add("country-selected");
   state.selectedCountryPath = path ?? null;
+}
+
+/** Applies the transient "hovered" highlight and tooltip to a country by
+ * geoName, the same as hovering it (or its marker) directly — used both by
+ * the map's own pointer handlers and by external callers like the book list
+ * hovering a country's books. Pass null to clear the hover entirely. */
+export function setHoveredCountry(state: SvgMapState, geoName: string | null): void {
+  state.hoveredCountryPath?.classList.remove("country-hovered");
+  const path = geoName ? state.countryPathsByName.get(geoName) : undefined;
+  path?.classList.add("country-hovered");
+  state.hoveredCountryPath = path ?? null;
+
+  const position = geoName ? state.markerPositionByGeoName.get(geoName) : undefined;
+  if (position) showTooltip(state.tooltip, position.x, position.y, position.label);
+  else hideTooltip(state.tooltip);
 }
 
 function createTooltipState(svg: SVGSVGElement): TooltipState {

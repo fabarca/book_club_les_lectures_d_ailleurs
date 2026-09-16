@@ -2,7 +2,7 @@ import { parseBookMarkdown } from "./lib/bookParser.js";
 import { lookupCountryGeoName } from "./lib/countryLookup.js";
 import { buildCountryCentroids, geometryToSvgPath } from "./lib/countryGeometry.js";
 import { project, MAP_VIEWBOX } from "./lib/geoProjection.js";
-import { createSvgMapState, renderCountries, renderMarkers, registerBackgroundClickHandler, registerCountryClickHandler, setSelectedCountry, setMarkersVisible, } from "./lib/svgMapView.js";
+import { createSvgMapState, renderCountries, renderMarkers, registerBackgroundClickHandler, registerCountryClickHandler, setSelectedCountry, setHoveredCountry, setMarkersVisible, } from "./lib/svgMapView.js";
 import { renderBookListPanel } from "./lib/bookListPanel.js";
 import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
 async function loadManifest() {
@@ -106,8 +106,9 @@ function getVisibleBooks(state) {
     return visibleBooks;
 }
 function showBookList(state) {
+    setSelectedCountry(state.mapState, state.currentFilterGeoName);
     const visibleBooks = getVisibleBooks(state);
-    renderBookListPanel(visibleBooks, state.filterOptions, state.currentFilterGeoName, handleFilterChange.bind(null, state), handleBookSelected.bind(null, state));
+    renderBookListPanel(visibleBooks, state.filterOptions, state.currentFilterGeoName, handleFilterChange.bind(null, state), handleBookSelected.bind(null, state), handleBookHoverChange.bind(null, state));
 }
 function setCurrentFilterGeoName(state, geoName) {
     state.currentFilterGeoName = geoName;
@@ -118,7 +119,13 @@ function handleFilterChange(state, geoName) {
     showBookList(state);
 }
 function handleBookSelected(state, book) {
+    const geoName = lookupCountryGeoName(book.country);
+    if (geoName)
+        setSelectedCountry(state.mapState, geoName);
     renderBookDetailPanel(book, showBookList.bind(null, state));
+}
+function handleBookHoverChange(state, geoName) {
+    setHoveredCountry(state.mapState, geoName);
 }
 function openPanel(state) {
     state.bookPanel?.classList.add("open");

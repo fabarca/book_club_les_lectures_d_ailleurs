@@ -1,5 +1,6 @@
 import type { Book } from "./types.js";
 import { escapeHtml } from "./html.js";
+import { lookupCountryGeoName } from "./countryLookup.js";
 
 export interface CountryFilterOption {
   geoName: string;
@@ -34,8 +35,9 @@ function buildFilterOptionsHtml(filterOptions: CountryFilterOption[]): string {
 }
 
 function buildBookListItemHtml(book: Book, index: number): string {
+  const geoName = lookupCountryGeoName(book.country) ?? "";
   const html = `
-        <li data-index="${index}">
+        <li data-index="${index}" data-geo="${escapeHtml(geoName)}">
           <img src="books/${book.imagePath}" alt="Couverture de ${escapeHtml(book.title)}" />
           <div>
             <strong>${escapeHtml(book.title)}</strong>
@@ -67,6 +69,14 @@ function handleBookItemClick(item: HTMLLIElement, books: Book[], onSelectBook: (
   onSelectBook(books[index]);
 }
 
+function handleBookItemPointerEnter(item: HTMLLIElement, onHoverBookChange: (geoName: string | null) => void): void {
+  onHoverBookChange(item.dataset.geo || null);
+}
+
+function handleBookItemPointerLeave(onHoverBookChange: (geoName: string | null) => void): void {
+  onHoverBookChange(null);
+}
+
 function attachFilterToggleListener(filterToggle: HTMLElement | null, filterOptionsList: HTMLElement | null): void {
   if (!filterToggle || !filterOptionsList) return;
   filterToggle.addEventListener("click", handleFilterToggleClick.bind(null, filterOptionsList));
@@ -83,10 +93,17 @@ function attachFilterOptionListeners(
   }
 }
 
-function attachBookItemListeners(panel: HTMLElement, books: Book[], onSelectBook: (book: Book) => void): void {
+function attachBookItemListeners(
+  panel: HTMLElement,
+  books: Book[],
+  onSelectBook: (book: Book) => void,
+  onHoverBookChange: (geoName: string | null) => void,
+): void {
   const items = panel.querySelectorAll<HTMLLIElement>("#book-list li");
   for (const item of items) {
     item.addEventListener("click", handleBookItemClick.bind(null, item, books, onSelectBook));
+    item.addEventListener("pointerenter", handleBookItemPointerEnter.bind(null, item, onHoverBookChange));
+    item.addEventListener("pointerleave", handleBookItemPointerLeave.bind(null, onHoverBookChange));
   }
 }
 
@@ -96,6 +113,7 @@ export function renderBookListPanel(
   selectedGeoName: string | null,
   onFilterChange: (geoName: string | null) => void,
   onSelectBook: (book: Book) => void,
+  onHoverBookChange: (geoName: string | null) => void,
 ): void {
   const panel = document.getElementById("book-panel");
   if (!panel) return;
@@ -116,5 +134,5 @@ export function renderBookListPanel(
   const filterOptionsList = document.getElementById("country-filter-options");
   attachFilterToggleListener(filterToggle, filterOptionsList);
   attachFilterOptionListeners(filterOptionsList, onFilterChange);
-  attachBookItemListeners(panel, books, onSelectBook);
+  attachBookItemListeners(panel, books, onSelectBook, onHoverBookChange);
 }

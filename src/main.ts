@@ -10,6 +10,7 @@ import {
   registerBackgroundClickHandler,
   registerCountryClickHandler,
   setSelectedCountry,
+  setHoveredCountry,
   setMarkersVisible,
   type SvgMapState,
   type CountryFeatureInput,
@@ -133,6 +134,7 @@ function getVisibleBooks(state: AppState): Book[] {
 }
 
 function showBookList(state: AppState): void {
+  setSelectedCountry(state.mapState, state.currentFilterGeoName);
   const visibleBooks = getVisibleBooks(state);
   renderBookListPanel(
     visibleBooks,
@@ -140,6 +142,7 @@ function showBookList(state: AppState): void {
     state.currentFilterGeoName,
     handleFilterChange.bind(null, state),
     handleBookSelected.bind(null, state),
+    handleBookHoverChange.bind(null, state),
   );
 }
 
@@ -154,7 +157,13 @@ function handleFilterChange(state: AppState, geoName: string | null): void {
 }
 
 function handleBookSelected(state: AppState, book: Book): void {
+  const geoName = lookupCountryGeoName(book.country);
+  if (geoName) setSelectedCountry(state.mapState, geoName);
   renderBookDetailPanel(book, showBookList.bind(null, state));
+}
+
+function handleBookHoverChange(state: AppState, geoName: string | null): void {
+  setHoveredCountry(state.mapState, geoName);
 }
 
 function openPanel(state: AppState): void {
