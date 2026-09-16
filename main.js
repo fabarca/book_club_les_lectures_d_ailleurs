@@ -2,7 +2,7 @@ import { parseBookMarkdown } from "./lib/bookParser.js";
 import { lookupCountryGeoName } from "./lib/countryLookup.js";
 import { buildCountryCentroids, geometryToSvgPath } from "./lib/countryGeometry.js";
 import { project, MAP_VIEWBOX } from "./lib/geoProjection.js";
-import { createSvgMapState, renderCountries, renderMarkers, registerBackgroundClickHandler, registerCountryClickHandler, setSelectedCountry, } from "./lib/svgMapView.js";
+import { createSvgMapState, renderCountries, renderMarkers, registerBackgroundClickHandler, registerCountryClickHandler, setSelectedCountry, setMarkersVisible, } from "./lib/svgMapView.js";
 import { renderBookListPanel } from "./lib/bookListPanel.js";
 import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
 async function loadManifest() {
@@ -134,6 +134,11 @@ function togglePanel(state) {
     else
         openPanel(state);
 }
+function toggleMarkerVisibility(state) {
+    state.markersVisible = !state.markersVisible;
+    setMarkersVisible(state.mapState, state.markersVisible);
+    state.markerToggle?.classList.toggle("markers-off", !state.markersVisible);
+}
 function handleMarkerSelected(state, geoName) {
     setCurrentFilterGeoName(state, geoName);
     showBookList(state);
@@ -162,6 +167,7 @@ async function main() {
     renderCountries(mapState, countries, new Set(booksByCountry.keys()));
     const bookPanel = document.getElementById("book-panel");
     const bookPanelToggle = document.getElementById("book-panel-toggle");
+    const markerToggle = document.getElementById("marker-toggle");
     const state = {
         books,
         booksByCountry,
@@ -170,8 +176,11 @@ async function main() {
         mapState,
         bookPanel,
         bookPanelToggle,
+        markerToggle,
+        markersVisible: true,
     };
     bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
+    markerToggle?.addEventListener("click", toggleMarkerVisibility.bind(null, state));
     renderMarkers(mapState, markers, handleMarkerSelected.bind(null, state));
     registerCountryClickHandler(mapState, handleMarkerSelected.bind(null, state));
     registerBackgroundClickHandler(mapState, handleMapBackgroundClicked.bind(null, state));

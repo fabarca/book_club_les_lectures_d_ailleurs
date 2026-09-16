@@ -348,6 +348,13 @@ export function renderMarkers(
   updateMarkerVisibility(state);
 }
 
+/** Shows or hides every marker at once, independent of the per-marker
+ * mobile zoom-gating (`updateMarkerVisibility`) — this hides the whole
+ * markers group regardless of that per-marker state. */
+export function setMarkersVisible(state: SvgMapState, visible: boolean): void {
+  state.markersGroup.classList.toggle("markers-group-hidden", !visible);
+}
+
 /** Registers a callback fired when the user clicks the map somewhere that
  * isn't a marker (a country without books, or open background/ocean). */
 export function registerBackgroundClickHandler(state: SvgMapState, callback: () => void): void {

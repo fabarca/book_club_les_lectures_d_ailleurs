@@ -10,6 +10,7 @@ import {
   registerBackgroundClickHandler,
   registerCountryClickHandler,
   setSelectedCountry,
+  setMarkersVisible,
   type SvgMapState,
   type CountryFeatureInput,
   type MarkerInput,
@@ -25,6 +26,8 @@ interface AppState {
   mapState: SvgMapState;
   bookPanel: HTMLElement | null;
   bookPanelToggle: HTMLElement | null;
+  markerToggle: HTMLElement | null;
+  markersVisible: boolean;
 }
 
 async function loadManifest(): Promise<ManifestEntry[]> {
@@ -169,6 +172,12 @@ function togglePanel(state: AppState): void {
   else openPanel(state);
 }
 
+function toggleMarkerVisibility(state: AppState): void {
+  state.markersVisible = !state.markersVisible;
+  setMarkersVisible(state.mapState, state.markersVisible);
+  state.markerToggle?.classList.toggle("markers-off", !state.markersVisible);
+}
+
 function handleMarkerSelected(state: AppState, geoName: string): void {
   setCurrentFilterGeoName(state, geoName);
   showBookList(state);
@@ -202,6 +211,7 @@ async function main(): Promise<void> {
 
   const bookPanel = document.getElementById("book-panel");
   const bookPanelToggle = document.getElementById("book-panel-toggle");
+  const markerToggle = document.getElementById("marker-toggle");
 
   const state: AppState = {
     books,
@@ -211,9 +221,12 @@ async function main(): Promise<void> {
     mapState,
     bookPanel,
     bookPanelToggle,
+    markerToggle,
+    markersVisible: true,
   };
 
   bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
+  markerToggle?.addEventListener("click", toggleMarkerVisibility.bind(null, state));
   renderMarkers(mapState, markers, handleMarkerSelected.bind(null, state));
   registerCountryClickHandler(mapState, handleMarkerSelected.bind(null, state));
   registerBackgroundClickHandler(mapState, handleMapBackgroundClicked.bind(null, state));

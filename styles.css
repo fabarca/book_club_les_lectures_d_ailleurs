@@ -17,6 +17,7 @@ html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
 
 .marker { cursor: pointer; }
 .marker.marker-hidden { display: none; }
+.markers-group-hidden { display: none; }
 .marker-pin-box, .marker-pin-tail { fill: #e4572e; }
 .marker:hover .marker-pin-box, .marker:hover .marker-pin-tail { fill: #c8431c; }
 .marker-count {
@@ -55,6 +56,21 @@ header h1 { margin: 0; font-size: 1.1em; }
 }
 #book-panel-toggle svg { width: 1.3em; height: 1.3em; }
 #book-panel-toggle.open { right: calc(min(320px, 90vw) + 1em); }
+
+/* Sits immediately left of #book-panel-toggle (3em button + 0.75em gap),
+   and shifts in step with it via :has() rather than duplicating the "open"
+   class, since this button's own toggled state is unrelated to the panel. */
+#marker-toggle {
+  position: fixed; top: 1em; right: calc(1em + 3.75em); z-index: 1100;
+  width: 3em; height: 3em; border-radius: 50%; border: none;
+  background: #2f6fab; color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: right 0.25s ease;
+}
+#marker-toggle svg { width: 1.3em; height: 1.3em; }
+#marker-toggle.markers-off { background: #9aa5ad; }
+body:has(#book-panel-toggle.open) #marker-toggle { right: calc(min(320px, 90vw) + 1em + 3.75em); }
 #book-detail-back {
   display: block; border: none; background: none; color: #2f6fab;
   cursor: pointer; padding: 0; margin-bottom: 0.5em; font-size: 0.9em;
@@ -97,6 +113,14 @@ header h1 { margin: 0; font-size: 1.1em; }
     transition: bottom 0.25s ease;
   }
   #book-panel-toggle.open { right: 1em; bottom: calc(min(50vh, 600px) + 1em); }
+
+  #marker-toggle {
+    top: auto; right: calc(1em + 3.75em); bottom: 1em;
+    transition: bottom 0.25s ease;
+  }
+  body:has(#book-panel-toggle.open) #marker-toggle {
+    right: calc(1em + 3.75em); bottom: calc(min(50vh, 600px) + 1em);
+  }
 
   /* While the panel covers the bottom half, give the map only the free
      top half so its starting view is centered there instead of being

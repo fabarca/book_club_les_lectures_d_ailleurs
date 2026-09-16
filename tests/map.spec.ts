@@ -135,6 +135,22 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
+  test("the marker toggle button hides and shows all markers, active by default", async ({ page, isMobile }) => {
+    test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
+    await page.goto("/");
+    const toggle = page.locator("#marker-toggle");
+    await expect(toggle).not.toHaveClass(/markers-off/);
+    await expect(page.locator(".marker").first()).toBeVisible();
+
+    await toggle.click();
+    await expect(toggle).toHaveClass(/markers-off/);
+    await expect(page.locator(".marker").first()).not.toBeVisible();
+
+    await toggle.click();
+    await expect(toggle).not.toHaveClass(/markers-off/);
+    await expect(page.locator(".marker").first()).toBeVisible();
+  });
+
   test("the panel toggle button opens and closes the book panel", async ({ page }) => {
     await page.goto("/");
     const panel = page.locator("#book-panel");
