@@ -52,6 +52,7 @@ export interface MarkerInput {
 interface TooltipState {
   group: SVGGElement;
   scaleGroup: SVGGElement;
+  mobileGroup: SVGGElement;
   background: SVGRectElement;
   text: SVGTextElement;
 }
@@ -66,7 +67,7 @@ export interface SvgMapState {
   countryPathsByName: Map<string, SVGPathElement>;
   tooltip: TooltipState;
   markerScaleGroups: SVGGElement[];
-  pinMobileGroups: SVGGElement[];
+  mobileScaleGroups: SVGGElement[];
   markerGroups: SVGGElement[];
   mobileQuery: MediaQueryList;
   backgroundClickCallback: (() => void) | null;
@@ -135,7 +136,7 @@ function currentMobileScale(state: SvgMapState): number {
 
 function applyMobileScale(state: SvgMapState): void {
   const scale = currentMobileScale(state);
-  for (const group of state.pinMobileGroups) {
+  for (const group of state.mobileScaleGroups) {
     group.setAttribute("transform", `scale(${scale})`);
   }
 }
@@ -194,11 +195,12 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
   // handleMapZoomChange's zoomRatio).
   const markerScaleGroups: SVGGElement[] = [tooltip.scaleGroup];
 
-  // Pin groups get an extra scale (on top of the zoom-cancelling one above)
-  // on mobile viewports, applied independently so the tooltip's size is
-  // unaffected. Kept in sync with the media query rather than read once, so
-  // rotating a phone or resizing a browser window updates it live.
-  const pinMobileGroups: SVGGElement[] = [];
+  // Pin and tooltip groups get an extra scale (on top of the zoom-cancelling
+  // one above) on mobile viewports, so the country-name label grows in step
+  // with the enlarged pin instead of staying pinned to its base size. Kept
+  // in sync with the media query rather than read once, so rotating a phone
+  // or resizing a browser window updates it live.
+  const mobileScaleGroups: SVGGElement[] = [tooltip.mobileGroup];
   const markerGroups: SVGGElement[] = [];
   const mobileQuery = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
 
@@ -209,12 +211,17 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
     countryPathsByName,
     tooltip,
     markerScaleGroups,
-    pinMobileGroups,
+    mobileScaleGroups,
     markerGroups,
     mobileQuery,
     backgroundClickCallback: null,
     currentZoomRatio: 1,
   };
+
+  // Markers set their own initial mobile scale when rendered (they don't
+  // exist yet at this point), but the tooltip group above does exist now
+  // and needs its initial scale applied explicitly.
+  applyMobileScale(state);
 
   mobileQuery.addEventListener("change", handleMobileQueryChange.bind(null, state));
 
@@ -281,7 +288,7 @@ function renderMarker(state: SvgMapState, marker: MarkerInput, onMarkerClick: (g
   scaleGroup.appendChild(pinGroup);
   group.appendChild(scaleGroup);
   state.markerScaleGroups.push(scaleGroup);
-  state.pinMobileGroups.push(pinGroup);
+  state.mobileScaleGroups.push(pinGroup);
   state.markerGroups.push(group);
 
   const countryPath = state.countryPathsByName.get(marker.geoName);
@@ -315,6 +322,7 @@ function createTooltipState(svg: SVGSVGElement): TooltipState {
   group.style.visibility = "hidden";
 
   const scaleGroup = document.createElementNS(SVG_NS, "g") as SVGGElement;
+  const mobileGroup = document.createElementNS(SVG_NS, "g") as SVGGElement;
   const background = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
   background.setAttribute("class", "marker-tooltip-bg");
   background.setAttribute("rx", String(TOOLTIP_PADDING_Y));
@@ -324,12 +332,13 @@ function createTooltipState(svg: SVGSVGElement): TooltipState {
   text.setAttribute("y", String(TOOLTIP_Y));
   text.setAttribute("font-size", String(TOOLTIP_FONT_SIZE));
 
-  scaleGroup.appendChild(background);
-  scaleGroup.appendChild(text);
+  mobileGroup.appendChild(background);
+  mobileGroup.appendChild(text);
+  scaleGroup.appendChild(mobileGroup);
   group.appendChild(scaleGroup);
   svg.appendChild(group); // appended last: always painted above markers
 
-  const tooltip: TooltipState = { group, scaleGroup, background, text };
+  const tooltip: TooltipState = { group, scaleGroup, mobileGroup, background, text };
   return tooltip;
 }
 
