@@ -119,10 +119,16 @@ function handleFilterChange(state, geoName) {
     showBookList(state);
 }
 function handleBookSelected(state, book) {
+    state.bookListScrollTop = state.bookPanel?.scrollTop ?? 0;
     const geoName = lookupCountryGeoName(book.country);
     if (geoName)
         setSelectedCountry(state.mapState, geoName);
-    renderBookDetailPanel(book, showBookList.bind(null, state));
+    renderBookDetailPanel(book, handleBookDetailBack.bind(null, state));
+}
+function handleBookDetailBack(state) {
+    showBookList(state);
+    if (state.bookPanel)
+        state.bookPanel.scrollTop = state.bookListScrollTop;
 }
 function handleBookHoverChange(state, geoName) {
     setHoveredCountry(state.mapState, geoName);
@@ -185,6 +191,7 @@ async function main() {
         bookPanelToggle,
         markerToggle,
         markersVisible: true,
+        bookListScrollTop: 0,
     };
     bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
     markerToggle?.addEventListener("click", toggleMarkerVisibility.bind(null, state));

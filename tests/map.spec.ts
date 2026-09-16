@@ -149,6 +149,45 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
+  test("opening a book's detail scrolls to the top, and back restores the list's scroll position", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const panel = page.locator("#book-panel");
+    await page.locator("#book-list li").nth(5).waitFor();
+
+    // Scroll down the list before picking a book further down it — #book-panel
+    // is the single scrollable element shared by both the list and detail
+    // views, and swapping its innerHTML doesn't reset scrollTop on its own.
+    // The panel is much shorter on mobile, so the browser may clamp this to
+    // less than 300 — read back the actual applied value (in a separate
+    // evaluate call, since the clamp isn't necessarily reflected yet within
+    // the same synchronous block) instead of assuming it.
+    await panel.evaluate((el) => {
+      el.scrollTop = 300;
+    });
+    const scrolledListPosition = await panel.evaluate((el) => el.scrollTop);
+    expect(scrolledListPosition).toBeGreaterThan(0);
+
+    // Dispatch the click directly instead of using the locator's .click(),
+    // which would scroll the target into view first and silently change
+    // scrollTop before the click even happens — defeating the point of this test.
+    await page.evaluate((index) => {
+      document.querySelectorAll("#book-list li")[index].dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true }),
+      );
+    }, 5);
+    await expect(page.locator("#book-detail-back")).toBeVisible();
+    expect(await panel.evaluate((el) => el.scrollTop)).toBe(0);
+
+    // Scrolling within the detail view itself shouldn't affect what "back" restores.
+    await panel.evaluate((el) => {
+      el.scrollTop = 50;
+    });
+    await page.locator("#book-detail-back").click();
+    expect(await panel.evaluate((el) => el.scrollTop)).toBe(scrolledListPosition);
+  });
+
   test("clicking the map background clears the country filter", async ({ page, isMobile }) => {
     test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
     await page.goto("/");

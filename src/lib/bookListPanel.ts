@@ -129,6 +129,7 @@ export function renderBookListPanel(
     </div>
     <ul id="book-list">${itemsHtml}</ul>
   `;
+  panel.scrollTop = 0;
 
   const filterToggle = document.getElementById("country-filter-toggle");
   const filterOptionsList = document.getElementById("country-filter-options");

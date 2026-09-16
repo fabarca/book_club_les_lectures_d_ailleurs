@@ -29,6 +29,7 @@ interface AppState {
   bookPanelToggle: HTMLElement | null;
   markerToggle: HTMLElement | null;
   markersVisible: boolean;
+  bookListScrollTop: number;
 }
 
 async function loadManifest(): Promise<ManifestEntry[]> {
@@ -157,9 +158,15 @@ function handleFilterChange(state: AppState, geoName: string | null): void {
 }
 
 function handleBookSelected(state: AppState, book: Book): void {
+  state.bookListScrollTop = state.bookPanel?.scrollTop ?? 0;
   const geoName = lookupCountryGeoName(book.country);
   if (geoName) setSelectedCountry(state.mapState, geoName);
-  renderBookDetailPanel(book, showBookList.bind(null, state));
+  renderBookDetailPanel(book, handleBookDetailBack.bind(null, state));
+}
+
+function handleBookDetailBack(state: AppState): void {
+  showBookList(state);
+  if (state.bookPanel) state.bookPanel.scrollTop = state.bookListScrollTop;
 }
 
 function handleBookHoverChange(state: AppState, geoName: string | null): void {
@@ -232,6 +239,7 @@ async function main(): Promise<void> {
     bookPanelToggle,
     markerToggle,
     markersVisible: true,
+    bookListScrollTop: 0,
   };
 
   bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));

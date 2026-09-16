@@ -14,5 +14,6 @@ export function renderBookDetailPanel(book: Book, onBack: () => void): void {
     ${book.sourceUrl ? `<p class="book-source"><a href="${escapeHtml(book.sourceUrl)}" target="_blank" rel="noopener noreferrer">Voir l'événement sur Meetup</a></p>` : ""}
     <div class="book-description">${escapeHtml(book.description).replace(/\n/g, "<br>")}</div>
   `;
+  panel.scrollTop = 0;
   document.getElementById("book-detail-back")?.addEventListener("click", onBack);
 }
