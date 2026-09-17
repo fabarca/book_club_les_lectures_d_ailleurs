@@ -22,6 +22,8 @@ export type FilterSelection =
   | { kind: "country"; geoName: string };
 
 const ALL_COUNTRIES_LABEL = "Tous les pays";
+const EXPANDED_CARET = "▼";
+const COLLAPSED_CARET = "►";
 
 function formatBookCount(count: number): string {
   const formatted = count === 1 ? "1 livre" : `${count} livres`;
@@ -37,12 +39,22 @@ function findFilterOption(filterTree: FilterTree, geoName: string): CountryFilte
   return undefined;
 }
 
-function getSelectedFilterLabel(filterTree: FilterTree, selectedFilter: FilterSelection): string {
-  if (selectedFilter.kind === "all") return ALL_COUNTRIES_LABEL;
-  if (selectedFilter.kind === "continent") return selectedFilter.continent;
+function findContinentGroup(filterTree: FilterTree, continent: string): ContinentFilterGroup | undefined {
+  return filterTree.find((group) => group.continent === continent);
+}
+
+function getSelectedFilterDisplay(
+  filterTree: FilterTree,
+  selectedFilter: FilterSelection,
+  totalBookCount: number,
+): { label: string; count: number } {
+  if (selectedFilter.kind === "all") return { label: ALL_COUNTRIES_LABEL, count: totalBookCount };
+  if (selectedFilter.kind === "continent") {
+    const group = findContinentGroup(filterTree, selectedFilter.continent);
+    return { label: selectedFilter.continent, count: group?.bookCount ?? 0 };
+  }
   const option = findFilterOption(filterTree, selectedFilter.geoName);
-  const label = option?.label ?? ALL_COUNTRIES_LABEL;
-  return label;
+  return { label: option?.label ?? ALL_COUNTRIES_LABEL, count: option?.bookCount ?? totalBookCount };
 }
 
 function buildCountryOptionHtml(option: CountryFilterOption): string {
@@ -63,7 +75,7 @@ function buildContinentGroupHtml(group: ContinentFilterGroup, selectedFilter: Fi
   for (const option of group.countries) countryItems.push(buildCountryOptionHtml(option));
   const expanded = isGroupExpanded(group, selectedFilter);
   const hiddenAttr = expanded ? "" : "hidden";
-  const caretGlyph = expanded ? "&#9662;" : "&#9656;";
+  const caretGlyph = expanded ? EXPANDED_CARET : COLLAPSED_CARET;
   const html = `
     <li class="continent-group">
       <div class="continent-row">
@@ -77,8 +89,10 @@ function buildContinentGroupHtml(group: ContinentFilterGroup, selectedFilter: Fi
   return html;
 }
 
-function buildFilterTreeHtml(filterTree: FilterTree, selectedFilter: FilterSelection): string {
-  const items: string[] = [`<li class="filter-option" data-kind="all">${ALL_COUNTRIES_LABEL}</li>`];
+function buildFilterTreeHtml(filterTree: FilterTree, selectedFilter: FilterSelection, totalBookCount: number): string {
+  const items: string[] = [
+    `<li class="filter-option" data-kind="all">${ALL_COUNTRIES_LABEL} <span class="country-count">(${formatBookCount(totalBookCount)})</span></li>`,
+  ];
   for (const group of filterTree) items.push(buildContinentGroupHtml(group, selectedFilter));
   const html = items.join("");
   return html;
@@ -129,7 +143,7 @@ function collapseOtherContinents(filterOptionsList: HTMLElement, exceptList: HTM
     const expandButton = countriesList.closest(".continent-group")?.querySelector<HTMLButtonElement>(".continent-expand");
     if (!expandButton) continue;
     expandButton.setAttribute("aria-expanded", "false");
-    expandButton.textContent = "▸";
+    expandButton.textContent = COLLAPSED_CARET;
   }
 }
 
@@ -143,7 +157,7 @@ function handleContinentExpandClick(
   countriesList.hidden = !countriesList.hidden;
   const expanded = !countriesList.hidden;
   expandButton.setAttribute("aria-expanded", String(expanded));
-  expandButton.textContent = expanded ? "▾" : "▸";
+  expandButton.textContent = expanded ? EXPANDED_CARET : COLLAPSED_CARET;
 }
 
 function handleBookItemClick(item: HTMLLIElement, books: Book[], onSelectBook: (book: Book) => void): void {
@@ -213,13 +227,13 @@ export function renderBookListPanel(
   const panel = document.getElementById("book-panel");
   if (!panel) return;
 
-  const selectedLabel = getSelectedFilterLabel(filterTree, selectedFilter);
-  const optionsHtml = buildFilterTreeHtml(filterTree, selectedFilter);
+  const { label, count } = getSelectedFilterDisplay(filterTree, selectedFilter, books.length);
+  const optionsHtml = buildFilterTreeHtml(filterTree, selectedFilter, books.length);
   const itemsHtml = buildBookListItemsHtml(books);
 
   panel.innerHTML = `
     <div class="country-filter">
-      <button id="country-filter-toggle">${escapeHtml(selectedLabel)} &#9662;</button>
+      <button id="country-filter-toggle">${escapeHtml(label)} <span class="country-count">(${formatBookCount(count)})</span> <span class="filter-arrow">▼</span></button>
       <ul id="country-filter-options" hidden>${optionsHtml}</ul>
     </div>
     <ul id="book-list">${itemsHtml}</ul>

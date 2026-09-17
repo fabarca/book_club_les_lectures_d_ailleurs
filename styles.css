@@ -85,6 +85,7 @@ body:has(#book-panel-toggle.open) #marker-toggle { right: calc(min(320px, 90vw) 
   width: 100%; text-align: left; padding: 0.5em; border: 1px solid #ccc;
   border-radius: 4px; background: #f7f7f7; cursor: pointer; font-size: 0.95em;
 }
+#country-filter-toggle .filter-arrow { font-size: 0.8em; }
 #country-filter-options {
   list-style: none; margin: 0.25em 0 0; padding: 0;
   border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto;
