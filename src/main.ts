@@ -238,9 +238,12 @@ async function main(): Promise<void> {
     bookPanel,
     bookPanelToggle,
     markerToggle,
-    markersVisible: true,
+    markersVisible: false,
     bookListScrollTop: 0,
   };
+
+  setMarkersVisible(mapState, state.markersVisible);
+  markerToggle?.classList.toggle("markers-off", !state.markersVisible);
 
   bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
   markerToggle?.addEventListener("click", toggleMarkerVisibility.bind(null, state));

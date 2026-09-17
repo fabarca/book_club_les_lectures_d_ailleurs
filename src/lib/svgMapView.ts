@@ -10,12 +10,6 @@ const MAX_ZOOM_SCALE = 12;
 const MOBILE_MARKER_SCALE = 4;
 const MOBILE_BREAKPOINT_QUERY = "(max-width: 600px)";
 
-// On mobile, markers only appear once the user has zoomed in at least this
-// much — at the fully zoomed-out view there isn't enough room between
-// countries to place them accurately by touch, so they'd just add clutter.
-// Zooming back out below this level hides them again.
-const MOBILE_MARKER_MIN_ZOOM = 2;
-
 // Box-pin geometry, in local units centered on the anchor tip at (0, 0).
 const PIN_SCALE = 0.6 * 0.85;
 const PIN_BOX_HALF_WIDTH = 7 * PIN_SCALE;
@@ -146,19 +140,8 @@ function applyMobileScale(state: SvgMapState): void {
   }
 }
 
-// The outer <g class="marker"> elements are hidden on mobile until the user
-// has zoomed in past MOBILE_MARKER_MIN_ZOOM.
-function updateMarkerVisibility(state: SvgMapState): void {
-  const visible = !state.mobileQuery.matches || state.currentZoomRatio <= 1 / MOBILE_MARKER_MIN_ZOOM;
-  for (const group of state.markerGroups) {
-    group.classList.toggle("marker-hidden", !visible);
-  }
-  if (!visible) hideTooltip(state.tooltip);
-}
-
 function handleMobileQueryChange(state: SvgMapState): void {
   applyMobileScale(state);
-  updateMarkerVisibility(state);
 }
 
 function handleMapZoomChange(state: SvgMapState, zoomRatio: number): void {
@@ -166,7 +149,6 @@ function handleMapZoomChange(state: SvgMapState, zoomRatio: number): void {
   for (const group of state.markerScaleGroups) {
     group.setAttribute("transform", `scale(${zoomRatio})`);
   }
-  updateMarkerVisibility(state);
 }
 
 function handleMapBackgroundClick(state: SvgMapState): void {
@@ -339,7 +321,6 @@ export function renderMarkers(
   onMarkerClick: (geoName: string) => void,
 ): void {
   for (const marker of markers) renderMarker(state, marker, onMarkerClick);
-  updateMarkerVisibility(state);
 }
 
 /** Shows or hides every marker at once, independent of the per-marker

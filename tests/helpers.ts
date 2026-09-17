@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /** A point on the map that's never covered by the header banner (top-left,
  * full-width on narrow viewports) or the book panel (right side on desktop,
@@ -61,6 +61,28 @@ export async function getCountryLandmassPoint(page: Page, geoName = "Brazil"): P
 
   if (!point) throw new Error(`Could not find a marker-free point on "${geoName}"'s shape`);
   return point;
+}
+
+/** A marker that isn't visually covered by a neighboring marker's pin at the
+ * current zoom level — on mobile, pins are drawn 4x larger and are no longer
+ * gated to only appear once zoomed in, so two countries with close-together
+ * markers can overlap at full zoom-out. Picks the first marker whose own
+ * center point still resolves, via the same elementFromPoint hit-testing the
+ * app uses for clicks, to itself rather than a neighbor. Call this only
+ * after markers have been made visible (e.g. via the marker toggle). */
+export async function getUnobstructedMarker(page: Page): Promise<Locator> {
+  const geoName = await page.evaluate(() => {
+    for (const marker of Array.from(document.querySelectorAll(".marker"))) {
+      const rect = marker.getBoundingClientRect();
+      const cx = rect.x + rect.width / 2;
+      const cy = rect.y + rect.height / 2;
+      const el = document.elementFromPoint(cx, cy);
+      if (el && el.closest(".marker") === marker) return marker.getAttribute("data-geo-name");
+    }
+    return null;
+  });
+  if (!geoName) throw new Error("Could not find an unobstructed marker");
+  return page.locator(`.marker[data-geo-name="${geoName}"]`);
 }
 
 /** The screen-space center of a country that has no books (and thus no

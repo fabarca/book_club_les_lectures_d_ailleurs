@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures";
-import { getSafeMapPoint, isMobileProject } from "./helpers";
+import { isMobileProject } from "./helpers";
 
 function readFirstMarkerPinTransform(): string | null {
   const marker = document.querySelector(".marker");
@@ -21,16 +21,13 @@ test.describe("mobile map markers", () => {
   // work here. All the actual logic still lives in isNotMobileProject.
   test.skip(({ isMobile }) => isNotMobileProject({ isMobile }), "Only relevant on the mobile project (narrow viewport)");
 
-  test("pins stay hidden until zoomed in, then scale up 4x", async ({ page }) => {
+  test("pins are visible once toggled on, scaled up 4x", async ({ page }) => {
     await page.goto("/");
     const firstMarker = page.locator(".marker").first();
-    await expect(firstMarker).toHaveClass(/marker-hidden/);
+    await firstMarker.waitFor({ state: "attached" });
+    await page.locator("#marker-toggle").click();
+    await expect(firstMarker).toBeVisible();
 
-    const safePoint = await getSafeMapPoint(page);
-    await page.mouse.move(safePoint.x, safePoint.y);
-    for (let i = 0; i < 10; i++) await page.mouse.wheel(0, -100);
-
-    await expect(firstMarker).not.toHaveClass(/marker-hidden/);
     const pinTransform = await page.evaluate(readFirstMarkerPinTransform);
     expect(pinTransform).toBe("scale(4)");
   });

@@ -1,20 +1,22 @@
 import { test, expect } from "./fixtures";
-import { getCountryLandmassPoint, getNoBooksCountryPoint, getSafeMapPoint, isMobileProject } from "./helpers";
+import {
+  getCountryLandmassPoint,
+  getNoBooksCountryPoint,
+  getSafeMapPoint,
+  getUnobstructedMarker,
+  isMobileProject,
+} from "./helpers";
 
 test.describe("map and book panel", () => {
   test("loads with map, countries and markers in the DOM", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("#map > svg")).toBeVisible();
     await expect(page.locator(".country").first()).toBeVisible();
-    // Markers exist regardless of viewport, but stay hidden on mobile until
-    // zoomed in (see mobile.spec.ts) — check presence, not visibility.
     await expect(page.locator(".marker")).not.toHaveCount(0);
   });
 
   test("every marker sits inside its own country's rendered shape", async ({ page }) => {
     await page.goto("/");
-    // Markers stay in the DOM but hidden (display:none) on mobile until
-    // zoomed in — this test only checks their geometry, not visibility.
     await page.locator(".marker").first().waitFor({ state: "attached" });
     const offenders = await page.evaluate(() => {
       const svg = document.querySelector("svg#map") as SVGSVGElement;
@@ -38,10 +40,12 @@ test.describe("map and book panel", () => {
     expect(offenders).toEqual([]);
   });
 
-  test("hovering a marker highlights its country and shows a tooltip", async ({ page, isMobile }) => {
-    test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
+  test("hovering a marker highlights its country and shows a tooltip", async ({ page }) => {
     await page.goto("/");
-    await page.locator(".marker").first().hover();
+    await page.locator(".marker").first().waitFor({ state: "attached" });
+    await page.locator("#marker-toggle").click();
+    const marker = await getUnobstructedMarker(page);
+    await marker.hover();
     await expect(page.locator(".country-hovered")).toHaveCount(1);
     await expect(page.locator(".marker-tooltip")).toBeVisible();
   });
@@ -58,10 +62,12 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".marker-tooltip")).toBeVisible();
   });
 
-  test("clicking a marker opens the book panel filtered to that country", async ({ page, isMobile }) => {
-    test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
+  test("clicking a marker opens the book panel filtered to that country", async ({ page }) => {
     await page.goto("/");
-    await page.locator(".marker").first().click();
+    await page.locator(".marker").first().waitFor({ state: "attached" });
+    await page.locator("#marker-toggle").click();
+    const marker = await getUnobstructedMarker(page);
+    await marker.click();
     await expect(page.locator("#book-panel")).toHaveClass(/open/);
     await expect(page.locator("#book-panel-toggle")).toHaveClass(/open/);
     await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
@@ -88,7 +94,10 @@ test.describe("map and book panel", () => {
   }) => {
     test.skip(isMobileProject({ isMobile }), "The book panel covers part of the map on mobile, making landmass targeting unreliable");
     await page.goto("/");
-    await page.locator(".marker").first().click();
+    const firstMarker = page.locator(".marker").first();
+    await firstMarker.waitFor({ state: "attached" });
+    await page.locator("#marker-toggle").click();
+    await firstMarker.click();
     await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
 
     const point = await getNoBooksCountryPoint(page);
@@ -97,10 +106,12 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
-  test("country filter dropdown opens and resetting to all countries updates the list", async ({ page, isMobile }) => {
-    test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
+  test("country filter dropdown opens and resetting to all countries updates the list", async ({ page }) => {
     await page.goto("/");
-    await page.locator(".marker").first().click();
+    await page.locator(".marker").first().waitFor({ state: "attached" });
+    await page.locator("#marker-toggle").click();
+    const marker = await getUnobstructedMarker(page);
+    await marker.click();
     await expect(page.locator(".country-selected")).toHaveCount(1);
 
     const filterToggle = page.locator("#country-filter-toggle");
@@ -188,10 +199,12 @@ test.describe("map and book panel", () => {
     expect(await panel.evaluate((el) => el.scrollTop)).toBe(scrolledListPosition);
   });
 
-  test("clicking the map background clears the country filter", async ({ page, isMobile }) => {
-    test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
+  test("clicking the map background clears the country filter", async ({ page }) => {
     await page.goto("/");
-    await page.locator(".marker").first().click();
+    await page.locator(".marker").first().waitFor({ state: "attached" });
+    await page.locator("#marker-toggle").click();
+    const marker = await getUnobstructedMarker(page);
+    await marker.click();
     await expect(page.locator("#country-filter-toggle")).not.toHaveText(/Tous les pays/);
     await expect(page.locator(".country-selected")).toHaveCount(1);
 
@@ -201,20 +214,19 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
-  test("the marker toggle button hides and shows all markers, active by default", async ({ page, isMobile }) => {
-    test.skip(isMobileProject({ isMobile }), "Markers are hidden until zoomed in on mobile; see mobile.spec.ts");
+  test("the marker toggle button hides and shows all markers, inactive by default", async ({ page }) => {
     await page.goto("/");
     const toggle = page.locator("#marker-toggle");
-    await expect(toggle).not.toHaveClass(/markers-off/);
-    await expect(page.locator(".marker").first()).toBeVisible();
-
-    await toggle.click();
     await expect(toggle).toHaveClass(/markers-off/);
     await expect(page.locator(".marker").first()).not.toBeVisible();
 
     await toggle.click();
     await expect(toggle).not.toHaveClass(/markers-off/);
     await expect(page.locator(".marker").first()).toBeVisible();
+
+    await toggle.click();
+    await expect(toggle).toHaveClass(/markers-off/);
+    await expect(page.locator(".marker").first()).not.toBeVisible();
   });
 
   test("the panel toggle button opens and closes the book panel", async ({ page }) => {

@@ -16,7 +16,6 @@ html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
 .country.country-hovered, .country.country-selected { fill: #f2a154; }
 
 .marker { cursor: pointer; }
-.marker.marker-hidden { display: none; }
 .markers-group-hidden { display: none; }
 .marker-pin-box, .marker-pin-tail { fill: #e4572e; }
 .marker:hover .marker-pin-box, .marker:hover .marker-pin-tail { fill: #c8431c; }
