@@ -3,8 +3,9 @@ import { lookupCountryGeoName } from "./lib/countryLookup.js";
 import { buildCountryCentroids, geometryToSvgPath } from "./lib/countryGeometry.js";
 import { project, MAP_VIEWBOX } from "./lib/geoProjection.js";
 import { createSvgMapState, renderCountries, renderMarkers, registerBackgroundClickHandler, registerCountryClickHandler, setSelectedCountry, setHoveredCountry, setMarkersVisible, } from "./lib/svgMapView.js";
-import { renderBookListPanel } from "./lib/bookListPanel.js";
+import { renderBookListPanel, } from "./lib/bookListPanel.js";
 import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
+import { lookupContinent, CONTINENT_ORDER } from "./lib/continentLookup.js";
 async function loadManifest() {
     const response = await fetch("manifest.json");
     if (!response.ok)
@@ -86,36 +87,78 @@ function buildCountryFeatures(geojson) {
     }
     return countries;
 }
+const UNMAPPED_CONTINENT_LABEL = "Autres";
 function compareFilterOptionsByLabel(a, b) {
     const comparison = a.label.localeCompare(b.label, "fr");
     return comparison;
 }
-function buildFilterOptions(booksByCountry) {
-    const filterOptions = [];
+function buildFilterTree(booksByCountry) {
+    const groupsByContinent = new Map();
     for (const [geoName, countryBooks] of booksByCountry) {
-        const option = { geoName, label: countryBooks[0].country };
-        filterOptions.push(option);
+        const continent = lookupContinent(geoName) ?? UNMAPPED_CONTINENT_LABEL;
+        const option = { geoName, label: countryBooks[0].country, bookCount: countryBooks.length };
+        const group = groupsByContinent.get(continent) ?? { continent, countries: [], bookCount: 0 };
+        group.countries.push(option);
+        group.bookCount += option.bookCount;
+        groupsByContinent.set(continent, group);
     }
-    filterOptions.sort(compareFilterOptionsByLabel);
-    return filterOptions;
+    const order = [...CONTINENT_ORDER, UNMAPPED_CONTINENT_LABEL];
+    const filterTree = [];
+    for (const continent of order) {
+        const group = groupsByContinent.get(continent);
+        if (!group)
+            continue;
+        group.countries.sort(compareFilterOptionsByLabel);
+        filterTree.push(group);
+    }
+    return filterTree;
+}
+function getContinentGroup(state, continent) {
+    for (const group of state.filterTree) {
+        if (group.continent === continent)
+            return group;
+    }
+    return undefined;
 }
 function getVisibleBooks(state) {
-    if (state.currentFilterGeoName === null)
+    const filter = state.currentFilter;
+    if (filter.kind === "all")
         return state.books;
-    const visibleBooks = state.booksByCountry.get(state.currentFilterGeoName) ?? [];
+    if (filter.kind === "country")
+        return state.booksByCountry.get(filter.geoName) ?? [];
+    const group = getContinentGroup(state, filter.continent);
+    if (!group)
+        return [];
+    const visibleBooks = [];
+    for (const country of group.countries) {
+        visibleBooks.push(...(state.booksByCountry.get(country.geoName) ?? []));
+    }
     return visibleBooks;
 }
+function getGeoNamesForSelection(state, filter) {
+    if (filter.kind === "all")
+        return null;
+    if (filter.kind === "country")
+        return filter.geoName;
+    const group = getContinentGroup(state, filter.continent);
+    if (!group)
+        return [];
+    const geoNames = [];
+    for (const country of group.countries)
+        geoNames.push(country.geoName);
+    return geoNames;
+}
 function showBookList(state) {
-    setSelectedCountry(state.mapState, state.currentFilterGeoName);
+    setSelectedCountry(state.mapState, getGeoNamesForSelection(state, state.currentFilter));
     const visibleBooks = getVisibleBooks(state);
-    renderBookListPanel(visibleBooks, state.filterOptions, state.currentFilterGeoName, handleFilterChange.bind(null, state), handleBookSelected.bind(null, state), handleBookHoverChange.bind(null, state));
+    renderBookListPanel(visibleBooks, state.filterTree, state.currentFilter, handleFilterChange.bind(null, state), handleBookSelected.bind(null, state), handleBookHoverChange.bind(null, state));
 }
-function setCurrentFilterGeoName(state, geoName) {
-    state.currentFilterGeoName = geoName;
-    setSelectedCountry(state.mapState, geoName);
+function setCurrentFilter(state, filter) {
+    state.currentFilter = filter;
+    setSelectedCountry(state.mapState, getGeoNamesForSelection(state, filter));
 }
-function handleFilterChange(state, geoName) {
-    setCurrentFilterGeoName(state, geoName);
+function handleFilterChange(state, filter) {
+    setCurrentFilter(state, filter);
     showBookList(state);
 }
 function handleBookSelected(state, book) {
@@ -153,12 +196,12 @@ function toggleMarkerVisibility(state) {
     state.markerToggle?.classList.toggle("markers-off", !state.markersVisible);
 }
 function handleMarkerSelected(state, geoName) {
-    setCurrentFilterGeoName(state, geoName);
+    setCurrentFilter(state, { kind: "country", geoName });
     showBookList(state);
     openPanel(state);
 }
 function handleMapBackgroundClicked(state) {
-    setCurrentFilterGeoName(state, null);
+    setCurrentFilter(state, { kind: "all" });
     showBookList(state);
 }
 function getMapContainer() {
@@ -174,7 +217,7 @@ async function main() {
     const booksByCountry = groupBooksByCountry(books, centroids);
     const markers = buildMarkers(booksByCountry, centroids);
     const countries = buildCountryFeatures(geojson);
-    const filterOptions = buildFilterOptions(booksByCountry);
+    const filterTree = buildFilterTree(booksByCountry);
     const mapContainer = getMapContainer();
     const mapState = createSvgMapState(mapContainer, MAP_VIEWBOX);
     renderCountries(mapState, countries, new Set(booksByCountry.keys()));
@@ -184,8 +227,8 @@ async function main() {
     const state = {
         books,
         booksByCountry,
-        filterOptions,
-        currentFilterGeoName: null,
+        filterTree,
+        currentFilter: { kind: "all" },
         mapState,
         bookPanel,
         bookPanelToggle,

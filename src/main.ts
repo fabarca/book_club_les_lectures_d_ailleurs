@@ -16,14 +16,21 @@ import {
   type CountryFeatureInput,
   type MarkerInput,
 } from "./lib/svgMapView.js";
-import { renderBookListPanel, type CountryFilterOption } from "./lib/bookListPanel.js";
+import {
+  renderBookListPanel,
+  type CountryFilterOption,
+  type ContinentFilterGroup,
+  type FilterTree,
+  type FilterSelection,
+} from "./lib/bookListPanel.js";
 import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
+import { lookupContinent, CONTINENT_ORDER } from "./lib/continentLookup.js";
 
 interface AppState {
   books: Book[];
   booksByCountry: Map<string, Book[]>;
-  filterOptions: CountryFilterOption[];
-  currentFilterGeoName: string | null;
+  filterTree: FilterTree;
+  currentFilter: FilterSelection;
   mapState: SvgMapState;
   bookPanel: HTMLElement | null;
   bookPanelToggle: HTMLElement | null;
@@ -113,47 +120,86 @@ function buildCountryFeatures(geojson: GeoJSON.FeatureCollection): CountryFeatur
   return countries;
 }
 
+const UNMAPPED_CONTINENT_LABEL = "Autres";
+
 function compareFilterOptionsByLabel(a: CountryFilterOption, b: CountryFilterOption): number {
   const comparison = a.label.localeCompare(b.label, "fr");
   return comparison;
 }
 
-function buildFilterOptions(booksByCountry: Map<string, Book[]>): CountryFilterOption[] {
-  const filterOptions: CountryFilterOption[] = [];
+function buildFilterTree(booksByCountry: Map<string, Book[]>): FilterTree {
+  const groupsByContinent = new Map<string, ContinentFilterGroup>();
   for (const [geoName, countryBooks] of booksByCountry) {
-    const option: CountryFilterOption = { geoName, label: countryBooks[0].country };
-    filterOptions.push(option);
+    const continent = lookupContinent(geoName) ?? UNMAPPED_CONTINENT_LABEL;
+    const option: CountryFilterOption = { geoName, label: countryBooks[0].country, bookCount: countryBooks.length };
+    const group = groupsByContinent.get(continent) ?? { continent, countries: [], bookCount: 0 };
+    group.countries.push(option);
+    group.bookCount += option.bookCount;
+    groupsByContinent.set(continent, group);
   }
-  filterOptions.sort(compareFilterOptionsByLabel);
-  return filterOptions;
+
+  const order = [...CONTINENT_ORDER, UNMAPPED_CONTINENT_LABEL];
+  const filterTree: FilterTree = [];
+  for (const continent of order) {
+    const group = groupsByContinent.get(continent);
+    if (!group) continue;
+    group.countries.sort(compareFilterOptionsByLabel);
+    filterTree.push(group);
+  }
+  return filterTree;
+}
+
+function getContinentGroup(state: AppState, continent: string): ContinentFilterGroup | undefined {
+  for (const group of state.filterTree) {
+    if (group.continent === continent) return group;
+  }
+  return undefined;
 }
 
 function getVisibleBooks(state: AppState): Book[] {
-  if (state.currentFilterGeoName === null) return state.books;
-  const visibleBooks = state.booksByCountry.get(state.currentFilterGeoName) ?? [];
+  const filter = state.currentFilter;
+  if (filter.kind === "all") return state.books;
+  if (filter.kind === "country") return state.booksByCountry.get(filter.geoName) ?? [];
+
+  const group = getContinentGroup(state, filter.continent);
+  if (!group) return [];
+  const visibleBooks: Book[] = [];
+  for (const country of group.countries) {
+    visibleBooks.push(...(state.booksByCountry.get(country.geoName) ?? []));
+  }
   return visibleBooks;
 }
 
+function getGeoNamesForSelection(state: AppState, filter: FilterSelection): string | string[] | null {
+  if (filter.kind === "all") return null;
+  if (filter.kind === "country") return filter.geoName;
+  const group = getContinentGroup(state, filter.continent);
+  if (!group) return [];
+  const geoNames: string[] = [];
+  for (const country of group.countries) geoNames.push(country.geoName);
+  return geoNames;
+}
+
 function showBookList(state: AppState): void {
-  setSelectedCountry(state.mapState, state.currentFilterGeoName);
+  setSelectedCountry(state.mapState, getGeoNamesForSelection(state, state.currentFilter));
   const visibleBooks = getVisibleBooks(state);
   renderBookListPanel(
     visibleBooks,
-    state.filterOptions,
-    state.currentFilterGeoName,
+    state.filterTree,
+    state.currentFilter,
     handleFilterChange.bind(null, state),
     handleBookSelected.bind(null, state),
     handleBookHoverChange.bind(null, state),
   );
 }
 
-function setCurrentFilterGeoName(state: AppState, geoName: string | null): void {
-  state.currentFilterGeoName = geoName;
-  setSelectedCountry(state.mapState, geoName);
+function setCurrentFilter(state: AppState, filter: FilterSelection): void {
+  state.currentFilter = filter;
+  setSelectedCountry(state.mapState, getGeoNamesForSelection(state, filter));
 }
 
-function handleFilterChange(state: AppState, geoName: string | null): void {
-  setCurrentFilterGeoName(state, geoName);
+function handleFilterChange(state: AppState, filter: FilterSelection): void {
+  setCurrentFilter(state, filter);
   showBookList(state);
 }
 
@@ -195,13 +241,13 @@ function toggleMarkerVisibility(state: AppState): void {
 }
 
 function handleMarkerSelected(state: AppState, geoName: string): void {
-  setCurrentFilterGeoName(state, geoName);
+  setCurrentFilter(state, { kind: "country", geoName });
   showBookList(state);
   openPanel(state);
 }
 
 function handleMapBackgroundClicked(state: AppState): void {
-  setCurrentFilterGeoName(state, null);
+  setCurrentFilter(state, { kind: "all" });
   showBookList(state);
 }
 
@@ -219,7 +265,7 @@ async function main(): Promise<void> {
   const booksByCountry = groupBooksByCountry(books, centroids);
   const markers = buildMarkers(booksByCountry, centroids);
   const countries = buildCountryFeatures(geojson);
-  const filterOptions = buildFilterOptions(booksByCountry);
+  const filterTree = buildFilterTree(booksByCountry);
 
   const mapContainer = getMapContainer();
   const mapState = createSvgMapState(mapContainer, MAP_VIEWBOX);
@@ -232,8 +278,8 @@ async function main(): Promise<void> {
   const state: AppState = {
     books,
     booksByCountry,
-    filterOptions,
-    currentFilterGeoName: null,
+    filterTree,
+    currentFilter: { kind: "all" },
     mapState,
     bookPanel,
     bookPanelToggle,

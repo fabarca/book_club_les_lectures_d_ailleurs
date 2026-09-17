@@ -69,7 +69,7 @@ export interface SvgMapState {
   mobileQuery: MediaQueryList;
   backgroundClickCallback: (() => void) | null;
   countryClickCallback: ((geoName: string) => void) | null;
-  selectedCountryPath: SVGPathElement | null;
+  selectedCountryPaths: SVGPathElement[];
   hoveredCountryPath: SVGPathElement | null;
   currentZoomRatio: number;
 }
@@ -209,7 +209,7 @@ export function createSvgMapState(container: HTMLElement, viewBox: string): SvgM
     mobileQuery,
     backgroundClickCallback: null,
     countryClickCallback: null,
-    selectedCountryPath: null,
+    selectedCountryPaths: [],
     hoveredCountryPath: null,
     currentZoomRatio: 1,
   };
@@ -342,14 +342,20 @@ export function registerCountryClickHandler(state: SvgMapState, callback: (geoNa
   state.countryClickCallback = callback;
 }
 
-/** Applies the persistent "selected" highlight to a country by geoName,
- * clearing it from whichever country previously had it. Pass null to clear
- * the highlight entirely. */
-export function setSelectedCountry(state: SvgMapState, geoName: string | null): void {
-  state.selectedCountryPath?.classList.remove("country-selected");
-  const path = geoName ? state.countryPathsByName.get(geoName) : undefined;
-  path?.classList.add("country-selected");
-  state.selectedCountryPath = path ?? null;
+/** Applies the persistent "selected" highlight to one or more countries by
+ * geoName, clearing it from whichever countries previously had it. Pass null
+ * to clear the highlight entirely. */
+export function setSelectedCountry(state: SvgMapState, geoName: string | string[] | null): void {
+  for (const path of state.selectedCountryPaths) path.classList.remove("country-selected");
+
+  const geoNames = geoName === null ? [] : Array.isArray(geoName) ? geoName : [geoName];
+  const paths: SVGPathElement[] = [];
+  for (const name of geoNames) {
+    const path = state.countryPathsByName.get(name);
+    if (path) paths.push(path);
+  }
+  for (const path of paths) path.classList.add("country-selected");
+  state.selectedCountryPaths = paths;
 }
 
 /** Applies the transient "hovered" highlight and tooltip to a country by

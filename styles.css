@@ -86,8 +86,24 @@ body:has(#book-panel-toggle.open) #marker-toggle { right: calc(min(320px, 90vw) 
   list-style: none; margin: 0.25em 0 0; padding: 0;
   border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto;
 }
-#country-filter-options li { padding: 0.5em; cursor: pointer; }
-#country-filter-options li:hover { background: #f0f0f0; }
+#country-filter-options li.filter-option,
+#country-filter-options .continent-select { padding: 0.5em; cursor: pointer; }
+#country-filter-options li.filter-option:hover,
+#country-filter-options .continent-select:hover { background: #f0f0f0; }
+
+.continent-group { list-style: none; }
+.continent-row { display: flex; align-items: center; }
+.continent-select {
+  flex: 1; display: block; width: 100%; text-align: left;
+  background: none; border: none; font: inherit; color: inherit;
+}
+.continent-count, .country-count { color: #777; font-size: 0.85em; margin-left: 0.35em; }
+.continent-expand {
+  flex-shrink: 0; width: 2em; padding: 0.5em 0; text-align: center;
+  background: none; border: none; cursor: pointer; font-size: 0.8em; color: #555;
+}
+.continent-countries { list-style: none; margin: 0; padding: 0; background: #fafafa; }
+.continent-countries li.filter-option { padding-left: 1.75em; }
 
 #book-list { list-style: none; margin: 0; padding: 0; }
 #book-list li {

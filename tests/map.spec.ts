@@ -124,6 +124,62 @@ test.describe("map and book panel", () => {
     await expect(page.locator(".country-selected")).toHaveCount(0);
   });
 
+  test("continent groups start collapsed, expanding one reveals its countries, and expanding another collapses it", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#country-filter-toggle").click();
+    const groups = page.locator(".continent-group");
+    test.skip((await groups.count()) < 2, "Need at least 2 continents in this dataset");
+
+    const firstGroup = groups.nth(0);
+    const secondGroup = groups.nth(1);
+    await expect(firstGroup.locator(".continent-countries")).toBeHidden();
+    await expect(secondGroup.locator(".continent-countries")).toBeHidden();
+
+    await firstGroup.locator(".continent-expand").click();
+    await expect(firstGroup.locator(".continent-countries")).toBeVisible();
+
+    await secondGroup.locator(".continent-expand").click();
+    await expect(secondGroup.locator(".continent-countries")).toBeVisible();
+    await expect(firstGroup.locator(".continent-countries")).toBeHidden();
+  });
+
+  test("selecting a continent filters the list to its countries and highlights all of them on the map", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#country-filter-toggle").click();
+    const continentGroups = page.locator(".continent-group");
+    const groupCount = await continentGroups.count();
+
+    let targetIndex = 0;
+    let maxCountries = 0;
+    for (let index = 0; index < groupCount; index++) {
+      const countryCount = await continentGroups.nth(index).locator(".continent-countries li.filter-option").count();
+      if (countryCount > maxCountries) {
+        maxCountries = countryCount;
+        targetIndex = index;
+      }
+    }
+    test.skip(maxCountries < 2, "No continent with multiple countries in this dataset");
+
+    const targetGroup = continentGroups.nth(targetIndex);
+    const continentSelect = targetGroup.locator(".continent-select");
+    const continentName = await continentSelect.getAttribute("data-continent");
+    await continentSelect.click();
+
+    await expect(page.locator("#country-filter-toggle")).toHaveText(new RegExp(String(continentName)));
+    await expect(page.locator(".country-selected")).toHaveCount(maxCountries);
+
+    // Selecting a continent re-renders the whole panel (closing the outer
+    // dropdown, like any filter change already did before this feature), but
+    // that continent's own list must already be expanded once reopened,
+    // without a separate expand click.
+    await page.locator("#country-filter-toggle").click();
+    await expect(continentGroups.nth(targetIndex).locator(".continent-countries")).toBeVisible();
+  });
+
   test("hovering a book highlights its country and shows the tooltip, like hovering the country directly", async ({
     page,
   }) => {
