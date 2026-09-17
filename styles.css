@@ -39,7 +39,7 @@ header h1 { margin: 0; font-size: 1.1em; }
   position: fixed; top: 0; right: 0; z-index: 1000;
   width: min(320px, 90vw); height: 100%; overflow-y: auto;
   background: white; box-shadow: -2px 0 8px rgba(0,0,0,0.2);
-  padding: 1em; box-sizing: border-box;
+  padding: 0 1em 1em; box-sizing: border-box;
   transform: translateX(100%);
   transition: transform 0.25s ease;
 }
@@ -71,13 +71,16 @@ header h1 { margin: 0; font-size: 1.1em; }
 #marker-toggle.markers-off { background: #9aa5ad; }
 body:has(#book-panel-toggle.open) #marker-toggle { right: calc(min(320px, 90vw) + 1em + 3.75em); }
 #book-detail-back {
-  display: block; border: none; background: none; color: #2f6fab;
-  cursor: pointer; padding: 0; margin-bottom: 0.5em; font-size: 0.9em;
+  position: sticky; top: 0; z-index: 1;
+  display: block; width: calc(100% + 2em);
+  margin: 0 -1em 0.5em; padding: 0.75em 1em;
+  border: none; background: white; color: #2f6fab;
+  cursor: pointer; font-size: 0.9em;
 }
 .book-meta { color: #555; }
 .book-edition { font-size: 0.85em; color: #888; }
 
-.country-filter { margin-bottom: 0.75em; }
+.country-filter { margin-top: 1em; margin-bottom: 0.75em; }
 #country-filter-toggle {
   width: 100%; text-align: left; padding: 0.5em; border: 1px solid #ccc;
   border-radius: 4px; background: #f7f7f7; cursor: pointer; font-size: 0.95em;

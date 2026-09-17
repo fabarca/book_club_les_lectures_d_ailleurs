@@ -255,6 +255,36 @@ test.describe("map and book panel", () => {
     expect(await panel.evaluate((el) => el.scrollTop)).toBe(scrolledListPosition);
   });
 
+  test("the back button stays visible and usable while the description is scrolled", async ({ page }) => {
+    await page.goto("/");
+    const panel = page.locator("#book-panel");
+    const bookItems = page.locator("#book-list li");
+    await bookItems.first().waitFor();
+    const itemCount = await bookItems.count();
+
+    let foundScrollable = false;
+    for (let index = 0; index < itemCount; index++) {
+      await bookItems.nth(index).click();
+      const isScrollable = await panel.evaluate((el) => el.scrollHeight > el.clientHeight);
+      if (isScrollable) {
+        foundScrollable = true;
+        break;
+      }
+      await page.locator("#book-detail-back").click();
+    }
+    test.skip(!foundScrollable, "No book description long enough to overflow the panel in this dataset");
+
+    await panel.evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+    });
+    const backButton = page.locator("#book-detail-back");
+    await expect(backButton).toBeVisible();
+    await expect(backButton).toBeInViewport();
+
+    await backButton.click();
+    await expect(page.locator("#book-list")).toBeVisible();
+  });
+
   test("clicking the map background clears the country filter", async ({ page }) => {
     await page.goto("/");
     await page.locator(".marker").first().waitFor({ state: "attached" });
