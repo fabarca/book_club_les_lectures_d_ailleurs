@@ -41,7 +41,7 @@ header h1 a:hover { text-decoration: underline; }
 
 #book-panel {
   position: fixed; top: 0; right: 0; z-index: 1000;
-  width: min(320px, 90vw); height: 100%; overflow-y: auto;
+  width: var(--book-panel-width, 25vw); height: 100%; overflow-y: auto;
   background: white; box-shadow: -2px 0 8px rgba(0,0,0,0.2);
   padding: 0 1em 1em; box-sizing: border-box;
   transform: translateX(100%);
@@ -49,6 +49,22 @@ header h1 a:hover { text-decoration: underline; }
 }
 #book-panel.open { transform: translateX(0); }
 #book-panel img { width: 100%; border-radius: 4px; }
+#book-panel-resizer {
+  position: fixed; top: 0; right: calc(var(--book-panel-width, 25vw) - 6px);
+  z-index: 1050;
+  width: 12px; height: 100%;
+  cursor: ew-resize; touch-action: none; background: transparent;
+  transform: translateX(var(--book-panel-width, 25vw));
+  transition: transform 0.25s ease;
+}
+#book-panel-resizer.open { transform: translateX(0); }
+#book-panel-resizer::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 6px; height: 60px; border-radius: 2px;
+  background: #ccc; transform: translate(-50%, -50%);
+}
+#book-panel-resizer:hover::after,
+#book-panel-resizer.dragging::after { background: #2f6fab; }
 #book-panel-toggle {
   position: fixed; top: 1em; right: 1em; z-index: 1100;
   width: 3em; height: 3em; border-radius: 50%; border: none;
@@ -58,7 +74,7 @@ header h1 a:hover { text-decoration: underline; }
   transition: right 0.25s ease;
 }
 #book-panel-toggle svg { width: 1.3em; height: 1.3em; }
-#book-panel-toggle.open { right: calc(min(320px, 90vw) + 1em); }
+#book-panel-toggle.open { right: calc(var(--book-panel-width, 25vw) + 1em); }
 
 /* Sits immediately left of #book-panel-toggle (3em button + 0.75em gap),
    and shifts in step with it via :has() rather than duplicating the "open"
@@ -73,7 +89,7 @@ header h1 a:hover { text-decoration: underline; }
 }
 #marker-toggle svg { width: 1.3em; height: 1.3em; }
 #marker-toggle.markers-off { background: #9aa5ad; }
-body:has(#book-panel-toggle.open) #marker-toggle { right: calc(min(320px, 90vw) + 1em + 3.75em); }
+body:has(#book-panel-toggle.open) #marker-toggle { right: calc(var(--book-panel-width, 25vw) + 1em + 3.75em); }
 #book-detail-back {
   position: sticky; top: 0; z-index: 1;
   display: block; width: calc(100% + 2em);
@@ -125,28 +141,37 @@ body:has(#book-panel-toggle.open) #marker-toggle { right: calc(min(320px, 90vw) 
 @media (max-width: 600px) {
   #book-panel {
     top: auto; bottom: 0; left: 0; right: 0; z-index: 1000;
-    width: 100%; height: min(50vh, 600px);
+    width: 100%; height: var(--book-panel-height, min(50vh, 600px));
     border-radius: 12px 12px 0 0;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
     transform: translateY(100%);
   }
   #book-panel.open { transform: translateY(0); }
+  #book-panel-resizer {
+    top: auto; left: 0; right: 0;
+    bottom: calc(var(--book-panel-height, min(50vh, 600px)) - 6px);
+    width: 100%; height: 12px;
+    cursor: ns-resize;
+    transform: translateY(var(--book-panel-height, min(50vh, 600px)));
+  }
+  #book-panel-resizer.open { transform: translateY(0); }
+  #book-panel-resizer::after { width: 60px; height: 6px; }
   #book-panel-toggle {
     top: auto; right: 1em; bottom: 1em;
     transition: bottom 0.25s ease;
   }
-  #book-panel-toggle.open { right: 1em; bottom: calc(min(50vh, 600px) + 1em); }
+  #book-panel-toggle.open { right: 1em; bottom: calc(var(--book-panel-height, min(50vh, 600px)) + 1em); }
 
   #marker-toggle {
     top: auto; right: calc(1em + 3.75em); bottom: 1em;
     transition: bottom 0.25s ease;
   }
   body:has(#book-panel-toggle.open) #marker-toggle {
-    right: calc(1em + 3.75em); bottom: calc(min(50vh, 600px) + 1em);
+    right: calc(1em + 3.75em); bottom: calc(var(--book-panel-height, min(50vh, 600px)) + 1em);
   }
 
   /* While the panel covers the bottom half, give the map only the free
      top half so its starting view is centered there instead of being
      centered on the full screen and cut off by the panel. */
-  body:has(#book-panel.open) #map { bottom: min(50vh, 600px); }
+  body:has(#book-panel.open) #map { bottom: var(--book-panel-height, min(50vh, 600px)); }
 }

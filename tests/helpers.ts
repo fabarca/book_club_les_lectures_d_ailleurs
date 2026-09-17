@@ -16,6 +16,29 @@ export function isMobileProject(fixtures: { isMobile: boolean | undefined }): bo
   return isMobile;
 }
 
+/** The book panel opens automatically on load, sliding in via a 0.25s CSS
+ * transition (see the `#book-panel.open` rule in styles.css). The resizer
+ * handle rides along with that same transition, so any test that needs its
+ * on-screen position (rather than just checking the "open" class) must wait
+ * for the slide-in to finish first, or it'll compute a mid-animation point. */
+export async function waitForPanelOpenTransition(page: Page): Promise<void> {
+  await page.locator("#book-panel.open").waitFor();
+  await page.waitForTimeout(300);
+}
+
+/** Drags the book panel's resize handle by the given screen-space delta,
+ * using the same move -> down -> move(steps) -> up idiom as the map's
+ * drag-to-pan tests in zoom-pan.spec.ts. */
+export async function dragPanelResizer(page: Page, deltaX: number, deltaY: number): Promise<void> {
+  const handle = page.locator("#book-panel-resizer");
+  const box = (await handle.boundingBox())!;
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.mouse.move(center.x + deltaX, center.y + deltaY, { steps: 5 });
+  await page.mouse.up();
+}
+
 export interface CountryPoint {
   x: number;
   y: number;

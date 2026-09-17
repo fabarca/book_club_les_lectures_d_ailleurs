@@ -6,6 +6,7 @@ import { createSvgMapState, renderCountries, renderMarkers, registerBackgroundCl
 import { renderBookListPanel, } from "./lib/bookListPanel.js";
 import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
 import { lookupContinent, CONTINENT_ORDER } from "./lib/continentLookup.js";
+import { setupPanelResize } from "./lib/panelResize.js";
 async function loadManifest() {
     const response = await fetch("manifest.json");
     if (!response.ok)
@@ -179,10 +180,12 @@ function handleBookHoverChange(state, geoName) {
 function openPanel(state) {
     state.bookPanel?.classList.add("open");
     state.bookPanelToggle?.classList.add("open");
+    state.bookPanelResizer?.classList.add("open");
 }
 function closePanel(state) {
     state.bookPanel?.classList.remove("open");
     state.bookPanelToggle?.classList.remove("open");
+    state.bookPanelResizer?.classList.remove("open");
 }
 function togglePanel(state) {
     if (state.bookPanel?.classList.contains("open"))
@@ -223,6 +226,7 @@ async function main() {
     renderCountries(mapState, countries, new Set(booksByCountry.keys()));
     const bookPanel = document.getElementById("book-panel");
     const bookPanelToggle = document.getElementById("book-panel-toggle");
+    const bookPanelResizer = document.getElementById("book-panel-resizer");
     const markerToggle = document.getElementById("marker-toggle");
     const state = {
         books,
@@ -232,12 +236,15 @@ async function main() {
         mapState,
         bookPanel,
         bookPanelToggle,
+        bookPanelResizer,
         markerToggle,
         markersVisible: false,
         bookListScrollTop: 0,
     };
     setMarkersVisible(mapState, state.markersVisible);
     markerToggle?.classList.toggle("markers-off", !state.markersVisible);
+    if (bookPanel && bookPanelResizer)
+        setupPanelResize(bookPanel, bookPanelResizer);
     bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
     markerToggle?.addEventListener("click", toggleMarkerVisibility.bind(null, state));
     renderMarkers(mapState, markers, handleMarkerSelected.bind(null, state));

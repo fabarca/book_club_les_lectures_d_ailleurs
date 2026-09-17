@@ -25,6 +25,7 @@ import {
 } from "./lib/bookListPanel.js";
 import { renderBookDetailPanel } from "./lib/bookDetailPanel.js";
 import { lookupContinent, CONTINENT_ORDER } from "./lib/continentLookup.js";
+import { setupPanelResize } from "./lib/panelResize.js";
 
 interface AppState {
   books: Book[];
@@ -34,6 +35,7 @@ interface AppState {
   mapState: SvgMapState;
   bookPanel: HTMLElement | null;
   bookPanelToggle: HTMLElement | null;
+  bookPanelResizer: HTMLElement | null;
   markerToggle: HTMLElement | null;
   markersVisible: boolean;
   bookListScrollTop: number;
@@ -222,11 +224,13 @@ function handleBookHoverChange(state: AppState, geoName: string | null): void {
 function openPanel(state: AppState): void {
   state.bookPanel?.classList.add("open");
   state.bookPanelToggle?.classList.add("open");
+  state.bookPanelResizer?.classList.add("open");
 }
 
 function closePanel(state: AppState): void {
   state.bookPanel?.classList.remove("open");
   state.bookPanelToggle?.classList.remove("open");
+  state.bookPanelResizer?.classList.remove("open");
 }
 
 function togglePanel(state: AppState): void {
@@ -273,6 +277,7 @@ async function main(): Promise<void> {
 
   const bookPanel = document.getElementById("book-panel");
   const bookPanelToggle = document.getElementById("book-panel-toggle");
+  const bookPanelResizer = document.getElementById("book-panel-resizer");
   const markerToggle = document.getElementById("marker-toggle");
 
   const state: AppState = {
@@ -283,6 +288,7 @@ async function main(): Promise<void> {
     mapState,
     bookPanel,
     bookPanelToggle,
+    bookPanelResizer,
     markerToggle,
     markersVisible: false,
     bookListScrollTop: 0,
@@ -290,6 +296,8 @@ async function main(): Promise<void> {
 
   setMarkersVisible(mapState, state.markersVisible);
   markerToggle?.classList.toggle("markers-off", !state.markersVisible);
+
+  if (bookPanel && bookPanelResizer) setupPanelResize(bookPanel, bookPanelResizer);
 
   bookPanelToggle?.addEventListener("click", togglePanel.bind(null, state));
   markerToggle?.addEventListener("click", toggleMarkerVisibility.bind(null, state));

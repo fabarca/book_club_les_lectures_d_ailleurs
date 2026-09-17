@@ -8,7 +8,7 @@ const MAX_ZOOM_SCALE = 12;
 // fingers are far less precise than a mouse cursor. Matches the layout
 // breakpoint used for the mobile book panel in styles.css.
 const MOBILE_MARKER_SCALE = 4;
-const MOBILE_BREAKPOINT_QUERY = "(max-width: 600px)";
+export const MOBILE_BREAKPOINT_QUERY = "(max-width: 600px)";
 
 // Box-pin geometry, in local units centered on the anchor tip at (0, 0).
 const PIN_SCALE = 0.6 * 0.85;
